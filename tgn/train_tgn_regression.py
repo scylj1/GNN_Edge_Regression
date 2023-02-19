@@ -220,6 +220,8 @@ for i in range(args.n_runs):
         edge_idxs_batch = train_data.edge_idxs[start_idx: end_idx]
         timestamps_batch = train_data.timestamps[start_idx:end_idx]
         edge_features_batch = train_data.edge_features[start_idx: end_idx]
+        
+        #print(np.squeeze(np.array(edge_features_batch)))
 
         size = len(sources_batch)
         _, negatives_batch = train_rand_sampler.sample(size)
@@ -265,7 +267,7 @@ for i in range(args.n_runs):
       # validation on unseen nodes
       train_memory_backup = tgn.memory.backup_memory()
 
-    val_ap, val_auc, val_measures_dict = eval_edge_prediction_modified(model=tgn,
+    val_loss = eval_edge_prediction_modified(model=tgn,
                                                             negative_edge_sampler=val_rand_sampler,
                                                             data=val_data,
                                                             n_neighbors=NUM_NEIGHBORS)
@@ -277,7 +279,7 @@ for i in range(args.n_runs):
       tgn.memory.restore_memory(train_memory_backup)
 
     # Validate on unseen nodes
-    nn_val_ap, nn_val_auc, nn_val_measures_dict = eval_edge_prediction_modified(model=tgn,
+    nn_val_loss = eval_edge_prediction_modified(model=tgn,
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
                                                                         n_neighbors=NUM_NEIGHBORS)
@@ -286,8 +288,8 @@ for i in range(args.n_runs):
       # Restore memory we had at the end of validation
       tgn.memory.restore_memory(val_memory_backup)
 
-    new_nodes_val_aps.append(nn_val_ap)
-    val_aps.append(val_ap)
+    new_nodes_val_aps.append(nn_val_loss)
+    val_aps.append(val_loss)
     train_losses.append(np.mean(m_loss))
 
     # Save temporary results to disk
@@ -305,12 +307,10 @@ for i in range(args.n_runs):
     logger.info('epoch: {} took {:.2f}s'.format(epoch, total_epoch_time))
     logger.info('Epoch mean loss: {}'.format(np.mean(m_loss)))
     logger.info(
-      'val auc: {}, new node val auc: {}'.format(val_auc, nn_val_auc))
-    logger.info(
-      'val ap: {}, new node val ap: {}'.format(val_ap, nn_val_ap))
+      'val loss: {}, new node val loss: {}'.format(val_loss, nn_val_loss))
 
     # Early stopping
-    if early_stopper.early_stop_check(val_ap):
+    '''if early_stopper.early_stop_check(val_ap):
       logger.info('No improvement over {} epochs, stop training'.format(early_stopper.max_round))
       logger.info(f'Loading the best model at epoch {early_stopper.best_epoch}')
       best_model_path = get_checkpoint_path(early_stopper.best_epoch)
@@ -319,7 +319,9 @@ for i in range(args.n_runs):
       tgn.eval()
       break
     else:
-      torch.save(tgn.state_dict(), get_checkpoint_path(epoch))
+      torch.save(tgn.state_dict(), get_checkpoint_path(epoch))'''
+    
+    torch.save(tgn.state_dict(), get_checkpoint_path(epoch))
 
   # Training has finished, we have loaded the best model, and we want to backup its current
   # memory (which has seen validation edges) so that it can also be used when testing on unseen
@@ -329,7 +331,7 @@ for i in range(args.n_runs):
 
   ### Test
   tgn.embedding_module.neighbor_finder = full_ngh_finder
-  test_ap, test_auc, test_measures_dict = eval_edge_prediction_modified(model=tgn,
+  test_loss = eval_edge_prediction_modified(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
                                                               n_neighbors=NUM_NEIGHBORS)
@@ -338,33 +340,30 @@ for i in range(args.n_runs):
     tgn.memory.restore_memory(val_memory_backup)
 
   # Test on unseen nodes
-  nn_test_ap, nn_test_auc, nn_test_measures_dict = eval_edge_prediction_modified(model=tgn,
+  nn_test_loss = eval_edge_prediction_modified(model=tgn,
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
                                                                           n_neighbors=NUM_NEIGHBORS)
 
   logger.info(
-    'Test statistics: Old nodes -- auc_inherent: {}'.format(test_auc))
+    'Test statistics: Old nodes -- loss: {}'.format(test_loss))
   logger.info(
-      'Test statistics: Old nodes -- ap_inherent: {}'.format(test_ap))
-  logger.info(
-    'Test statistics: New nodes -- auc_inherent: {}'.format(nn_test_auc))
-  logger.info(
-      'Test statistics: New nodes -- ap_inherent: {}'.format(nn_test_ap))
+    'Test statistics: New nodes -- loss: {}'.format(nn_test_loss))
+
 
   # extra performance measures
   # Note: just prints out for the Test set!
-  for measure_name, measure_value in test_measures_dict.items():
+  '''for measure_name, measure_value in test_measures_dict.items():
       logger.info('Test statistics: Old nodes -- {}: {}'.format(measure_name, measure_value))
   for measure_name, measure_value in nn_test_measures_dict.items():
       logger.info('Test statistics: New nodes -- {}: {}'.format(measure_name, measure_value))
-
+'''
   # Save results for this run
   pickle.dump({
     "val_aps": val_aps,
     "new_nodes_val_aps": new_nodes_val_aps,
-    "test_ap": test_ap,
-    "new_node_test_ap": nn_test_ap,
+    "test_loss": test_loss,
+    "new_node_test_ap": nn_test_loss,
     "epoch_times": epoch_times,
     "train_losses": train_losses,
     "total_epoch_times": total_epoch_times
