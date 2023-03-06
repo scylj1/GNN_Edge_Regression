@@ -336,8 +336,6 @@ class TGN(torch.nn.Module):
         
         score = self.affinity_score(torch.cat([source_node_embedding, ], dim=0),
                                     torch.cat([destination_node_embedding, ])).squeeze(dim=0)
-        #print(score)
-        #print(score.sigmoid())
 
         #return score.sigmoid()
         return score

@@ -76,11 +76,17 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     timestamps = graph_df.ts.values
     edge_features = edge_features[1:]
     
-    # normalisation
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    edge_features = scaler.fit_transform(edge_features)
-    print(np.mean(edge_features))
-    #print(len(edge_features))
+    deciles = np.percentile(edge_features, np.arange(10, 101, 10))
+    bins = np.digitize(edge_features, deciles)
+    print(bins)
+    result = [edge_features[bins == i] for i in range(0, 10)]
+    for r in result:
+        print(len(r))
+    print(deciles)
+    print(len(edge_features[edge_features < 5]))
+    print(len(edge_features))
+    print(np.max(edge_features))
+    print(np.min(edge_features))
 
     full_data = Data(sources, destinations, timestamps, edge_idxs, labels, edge_features)
 

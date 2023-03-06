@@ -9,10 +9,10 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from evaluation.evaluation_regression import eval_edge_prediction_modified, eval_edge_prediction_baseline
-from model.tgn_regression import TGN
+from evaluation.evaluation import eval_edge_prediction_modified
+from model.tgn import TGN
 from utils.utils import EarlyStopMonitor, RandEdgeSampler, get_neighbor_finder
-from utils.data_processing import get_data, compute_time_statistics
+from utils.data_processing_classification import get_data, compute_time_statistics
 print('test')
 torch.manual_seed(0)
 np.random.seed(0)
@@ -119,8 +119,7 @@ node_features, edge_features, full_data, train_data, val_data, test_data, new_no
 new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio,
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
                               randomize_features=args.randomize_features)
-#print(len(test_data.edge_features))
-#print(len(test_data.sources))
+
 # Initialize training neighbor finder to retrieve temporal graph
 train_ngh_finder = get_neighbor_finder(train_data, args.uniform)
 
@@ -172,7 +171,7 @@ for i in range(args.n_runs):
             use_destination_embedding_in_message=args.use_destination_embedding_in_message,
             use_source_embedding_in_message=args.use_source_embedding_in_message,
             dyrep=args.dyrep)
-  criterion = torch.nn.MSELoss()
+  criterion = torch.nn.BCELoss()
   optimizer = torch.optim.Adam(tgn.parameters(), lr=LEARNING_RATE)
   tgn = tgn.to(device)
 
@@ -221,17 +220,10 @@ for i in range(args.n_runs):
         edge_idxs_batch = train_data.edge_idxs[start_idx: end_idx]
         timestamps_batch = train_data.timestamps[start_idx:end_idx]
         edge_features_batch = train_data.edge_features[start_idx: end_idx]
-        
-        #print(np.squeeze(np.array(edge_features_batch)))
 
         size = len(sources_batch)
         _, negatives_batch = train_rand_sampler.sample(size)
 
-        '''print(sources_batch)
-        print(destinations_batch)
-        print(edge_idxs_batch)
-        print(len)'''
-        
         with torch.no_grad():
           #pos_label = torch.ones(size, dtype=torch.float, device=device)
           pos_label = torch.tensor(edge_features_batch, dtype=torch.float, device=device).squeeze()
@@ -268,11 +260,7 @@ for i in range(args.n_runs):
       # validation on unseen nodes
       train_memory_backup = tgn.memory.backup_memory()
 
-    val_loss = eval_edge_prediction_modified(model=tgn,
-                                                            negative_edge_sampler=val_rand_sampler,
-                                                            data=val_data,
-                                                            n_neighbors=NUM_NEIGHBORS)
-    val_loss_base = eval_edge_prediction_baseline(model=tgn,
+    val_ap, val_auc, val_measures_dict = eval_edge_prediction_modified(model=tgn,
                                                             negative_edge_sampler=val_rand_sampler,
                                                             data=val_data,
                                                             n_neighbors=NUM_NEIGHBORS)
@@ -284,7 +272,7 @@ for i in range(args.n_runs):
       tgn.memory.restore_memory(train_memory_backup)
 
     # Validate on unseen nodes
-    nn_val_loss = eval_edge_prediction_modified(model=tgn,
+    nn_val_ap, nn_val_auc, nn_val_measures_dict = eval_edge_prediction_modified(model=tgn,
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
                                                                         n_neighbors=NUM_NEIGHBORS)
@@ -293,8 +281,8 @@ for i in range(args.n_runs):
       # Restore memory we had at the end of validation
       tgn.memory.restore_memory(val_memory_backup)
 
-    new_nodes_val_aps.append(nn_val_loss)
-    val_aps.append(val_loss)
+    new_nodes_val_aps.append(nn_val_ap)
+    val_aps.append(val_ap)
     train_losses.append(np.mean(m_loss))
 
     # Save temporary results to disk
@@ -311,10 +299,13 @@ for i in range(args.n_runs):
 
     logger.info('epoch: {} took {:.2f}s'.format(epoch, total_epoch_time))
     logger.info('Epoch mean loss: {}'.format(np.mean(m_loss)))
-    logger.info('val loss base: {}, val loss: {}, new node val loss: {}'.format(val_loss_base, val_loss, nn_val_loss))
+    logger.info(
+      'val auc: {}, new node val auc: {}'.format(val_auc, nn_val_auc))
+    logger.info(
+      'val ap: {}, new node val ap: {}'.format(val_ap, nn_val_ap))
 
     # Early stopping
-    '''if early_stopper.early_stop_check(val_ap):
+    if early_stopper.early_stop_check(val_ap):
       logger.info('No improvement over {} epochs, stop training'.format(early_stopper.max_round))
       logger.info(f'Loading the best model at epoch {early_stopper.best_epoch}')
       best_model_path = get_checkpoint_path(early_stopper.best_epoch)
@@ -323,9 +314,7 @@ for i in range(args.n_runs):
       tgn.eval()
       break
     else:
-      torch.save(tgn.state_dict(), get_checkpoint_path(epoch))'''
-    
-    #torch.save(tgn.state_dict(), get_checkpoint_path(epoch))
+      torch.save(tgn.state_dict(), get_checkpoint_path(epoch))
 
   # Training has finished, we have loaded the best model, and we want to backup its current
   # memory (which has seen validation edges) so that it can also be used when testing on unseen
@@ -334,8 +323,8 @@ for i in range(args.n_runs):
     val_memory_backup = tgn.memory.backup_memory()
 
   ### Test
-  '''tgn.embedding_module.neighbor_finder = full_ngh_finder
-  test_loss = eval_edge_prediction_modified(model=tgn,
+  tgn.embedding_module.neighbor_finder = full_ngh_finder
+  test_ap, test_auc, test_measures_dict = eval_edge_prediction_modified(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
                                                               n_neighbors=NUM_NEIGHBORS)
@@ -344,27 +333,38 @@ for i in range(args.n_runs):
     tgn.memory.restore_memory(val_memory_backup)
 
   # Test on unseen nodes
-  nn_test_loss = eval_edge_prediction_modified(model=tgn,
+  nn_test_ap, nn_test_auc, nn_test_measures_dict = eval_edge_prediction_modified(model=tgn,
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
                                                                           n_neighbors=NUM_NEIGHBORS)
 
   logger.info(
-    'Test statistics: Old nodes -- loss: {}'.format(test_loss))
+    'Test statistics: Old nodes -- auc_inherent: {}'.format(test_auc))
   logger.info(
-    'Test statistics: New nodes -- loss: {}'.format(nn_test_loss))
+      'Test statistics: Old nodes -- ap_inherent: {}'.format(test_ap))
+  logger.info(
+    'Test statistics: New nodes -- auc_inherent: {}'.format(nn_test_auc))
+  logger.info(
+      'Test statistics: New nodes -- ap_inherent: {}'.format(nn_test_ap))
+
+  # extra performance measures
+  # Note: just prints out for the Test set!
+  for measure_name, measure_value in test_measures_dict.items():
+      logger.info('Test statistics: Old nodes -- {}: {}'.format(measure_name, measure_value))
+  for measure_name, measure_value in nn_test_measures_dict.items():
+      logger.info('Test statistics: New nodes -- {}: {}'.format(measure_name, measure_value))
 
   # Save results for this run
   pickle.dump({
     "val_aps": val_aps,
     "new_nodes_val_aps": new_nodes_val_aps,
-    "test_loss": test_loss,
-    "new_node_test_ap": nn_test_loss,
+    "test_ap": test_ap,
+    "new_node_test_ap": nn_test_ap,
     "epoch_times": epoch_times,
     "train_losses": train_losses,
     "total_epoch_times": total_epoch_times
   }, open(results_path, "wb"))
-'''
+
   logger.info('Saving the model')
   if USE_MEMORY:
     # Restore memory at the end of validation (save a model which is ready for testing)
