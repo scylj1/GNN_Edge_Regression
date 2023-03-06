@@ -189,8 +189,8 @@ for i in range(args.n_runs):
   total_epoch_times = []
   train_losses = []
 
-  early_stopper = EarlyStopMonitor(max_round=args.patience, tolerance=1e-20)
-  
+  early_stopper = EarlyStopMonitor(max_round=args.patience, higher_better=False, tolerance=1e-20)
+
   for epoch in range(NUM_EPOCH):
     start_epoch = time.time()
     ### Training
