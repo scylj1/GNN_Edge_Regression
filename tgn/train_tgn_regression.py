@@ -319,7 +319,7 @@ for i in range(args.n_runs):
     logger.info('val loss base: {}, val loss: {}, new node val loss base: {}, new node val loss: {}'.format(val_loss_base, val_loss, nn_val_loss_base, nn_val_loss))
 
     # Early stopping
-    '''if early_stopper.early_stop_check(val_ap):
+    if early_stopper.early_stop_check(val_loss):
       logger.info('No improvement over {} epochs, stop training'.format(early_stopper.max_round))
       logger.info(f'Loading the best model at epoch {early_stopper.best_epoch}')
       best_model_path = get_checkpoint_path(early_stopper.best_epoch)
@@ -328,7 +328,7 @@ for i in range(args.n_runs):
       tgn.eval()
       break
     else:
-      torch.save(tgn.state_dict(), get_checkpoint_path(epoch))'''
+      torch.save(tgn.state_dict(), get_checkpoint_path(epoch))
     
     #torch.save(tgn.state_dict(), get_checkpoint_path(epoch))
 
