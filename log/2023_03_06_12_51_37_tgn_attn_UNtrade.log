@@ -1,0 +1,203 @@
+2023-03-06 12:51:37,006 - root - INFO - Namespace(data='UNtrade', bs=200, prefix='tgn_attn', n_degree=10, n_head=2, n_epoch=50, n_layer=1, lr=0.0001, patience=5, n_runs=5, drop_out=0.1, gpu=2, node_dim=100, time_dim=100, backprop_every=1, use_memory=True, embedding_module='graph_attention', message_function='identity', memory_updater='gru', aggregator='last', memory_update_at_end=False, message_dim=100, memory_dim=172, different_new_nodes=False, uniform=False, randomize_features=False, use_destination_embedding_in_message=False, use_source_embedding_in_message=False, dyrep=False, val_ratio=0.15, test_ratio=0.15)
+2023-03-06 12:51:39,974 - root - INFO - ************************************
+2023-03-06 12:51:39,974 - root - INFO - ********** Run 0 starts. **********
+2023-03-06 12:51:41,498 - root - INFO - num of training instances: 278721
+2023-03-06 12:51:41,499 - root - INFO - num of batches per epoch: 1394
+2023-03-06 12:51:41,499 - root - INFO - start 0 epoch
+2023-03-06 12:52:36,387 - root - INFO - epoch: 0 took 54.89s
+2023-03-06 12:52:36,388 - root - INFO - Epoch mean loss: 0.008430467652900996
+2023-03-06 12:52:36,388 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0003385015003943766, new node val loss base: 0.00019404371638802434, new node val loss: 0.00042325673114149186
+2023-03-06 12:52:36,401 - root - INFO - start 1 epoch
+2023-03-06 12:53:29,635 - root - INFO - epoch: 1 took 53.24s
+2023-03-06 12:53:29,635 - root - INFO - Epoch mean loss: 0.0005874854944221242
+2023-03-06 12:53:29,635 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002723807892082641, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002995239458440243
+2023-03-06 12:53:29,650 - root - INFO - start 2 epoch
+2023-03-06 12:54:23,104 - root - INFO - epoch: 2 took 53.46s
+2023-03-06 12:54:23,104 - root - INFO - Epoch mean loss: 0.0002927841807392921
+2023-03-06 12:54:23,104 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002327502982427025, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002336607120736902
+2023-03-06 12:54:23,116 - root - INFO - start 3 epoch
+2023-03-06 12:55:16,731 - root - INFO - epoch: 3 took 53.62s
+2023-03-06 12:55:16,731 - root - INFO - Epoch mean loss: 0.00021713436024911817
+2023-03-06 12:55:16,731 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00041494282805329684, new node val loss base: 0.00019404371638802434, new node val loss: 0.00042280144719795753
+2023-03-06 12:55:16,743 - root - INFO - start 4 epoch
+2023-03-06 12:56:10,434 - root - INFO - epoch: 4 took 53.70s
+2023-03-06 12:56:10,434 - root - INFO - Epoch mean loss: 0.0002109850874040529
+2023-03-06 12:56:10,434 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00022752521767185443, new node val loss base: 0.00019404371638802434, new node val loss: 0.00025768936765762745
+2023-03-06 12:56:10,446 - root - INFO - start 5 epoch
+2023-03-06 12:57:04,622 - root - INFO - epoch: 5 took 54.18s
+2023-03-06 12:57:04,622 - root - INFO - Epoch mean loss: 0.0001850804003751073
+2023-03-06 12:57:04,622 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00030405443445654626, new node val loss base: 0.00019404371638802434, new node val loss: 0.0003340637464697104
+2023-03-06 12:57:04,637 - root - INFO - start 6 epoch
+2023-03-06 12:57:57,745 - root - INFO - epoch: 6 took 53.12s
+2023-03-06 12:57:57,745 - root - INFO - Epoch mean loss: 0.0009536590179525783
+2023-03-06 12:57:57,745 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00021781049752420717, new node val loss base: 0.00019404371638802434, new node val loss: 0.00019931383591040264
+2023-03-06 12:57:57,757 - root - INFO - start 7 epoch
+2023-03-06 12:58:51,956 - root - INFO - epoch: 7 took 54.21s
+2023-03-06 12:58:51,956 - root - INFO - Epoch mean loss: 0.0001366082284258137
+2023-03-06 12:58:51,956 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00022295000896504298, new node val loss base: 0.00019404371638802434, new node val loss: 0.00020726400042305905
+2023-03-06 12:58:51,969 - root - INFO - start 8 epoch
+2023-03-06 12:59:46,130 - root - INFO - epoch: 8 took 54.17s
+2023-03-06 12:59:46,130 - root - INFO - Epoch mean loss: 0.00013628069611652972
+2023-03-06 12:59:46,130 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00021858428801804503, new node val loss base: 0.00019404371638802434, new node val loss: 0.0001982399170009472
+2023-03-06 12:59:46,130 - root - INFO - No improvement over 5 epochs, stop training
+2023-03-06 12:59:46,130 - root - INFO - Loading the best model at epoch 3
+2023-03-06 12:59:46,135 - root - INFO - Loaded the best model at epoch 3 for inference
+2023-03-06 12:59:52,082 - root - INFO - Test statistics: Old nodes -- loss base: 0.0001978986621009706
+2023-03-06 12:59:52,083 - root - INFO - Test statistics: Old nodes -- loss: 0.0003786142049669807
+2023-03-06 12:59:52,083 - root - INFO - Test statistics: New nodes -- loss base: 0.0001952443265171422
+2023-03-06 12:59:52,083 - root - INFO - Test statistics: New nodes -- loss: 0.0004058367261298923
+2023-03-06 12:59:52,083 - root - INFO - Saving the model
+2023-03-06 12:59:52,149 - root - INFO - TGN model saved
+2023-03-06 12:59:52,149 - root - INFO - Run 0, elapsed time: 492.17532539367676 seconds.
+2023-03-06 12:59:52,149 - root - INFO - ************************************
+2023-03-06 12:59:52,149 - root - INFO - ********** Run 1 starts. **********
+2023-03-06 12:59:52,172 - root - INFO - num of training instances: 278721
+2023-03-06 12:59:52,172 - root - INFO - num of batches per epoch: 1394
+2023-03-06 12:59:52,173 - root - INFO - start 0 epoch
+2023-03-06 13:00:46,504 - root - INFO - epoch: 0 took 54.33s
+2023-03-06 13:00:46,505 - root - INFO - Epoch mean loss: 0.005090959765355422
+2023-03-06 13:00:46,505 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.000776264476766621, new node val loss base: 0.00019404371638802434, new node val loss: 0.0007189142013177373
+2023-03-06 13:00:46,518 - root - INFO - start 1 epoch
+2023-03-06 13:01:37,043 - root - INFO - epoch: 1 took 50.53s
+2023-03-06 13:01:37,043 - root - INFO - Epoch mean loss: 0.00046799808816642817
+2023-03-06 13:01:37,043 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00024938502962980135, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002559047035564309
+2023-03-06 13:01:37,077 - root - INFO - start 2 epoch
+2023-03-06 13:02:30,825 - root - INFO - epoch: 2 took 53.77s
+2023-03-06 13:02:30,825 - root - INFO - Epoch mean loss: 0.0002400195088543182
+2023-03-06 13:02:30,825 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00023112725883216154, new node val loss base: 0.00019404371638802434, new node val loss: 0.00022369501150836142
+2023-03-06 13:02:30,844 - root - INFO - start 3 epoch
+2023-03-06 13:03:25,186 - root - INFO - epoch: 3 took 54.35s
+2023-03-06 13:03:25,186 - root - INFO - Epoch mean loss: 0.00017326795696699735
+2023-03-06 13:03:25,187 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00022087219450897695, new node val loss base: 0.00019404371638802434, new node val loss: 0.00020461278323482008
+2023-03-06 13:03:25,200 - root - INFO - start 4 epoch
+2023-03-06 13:04:18,617 - root - INFO - epoch: 4 took 53.42s
+2023-03-06 13:04:18,617 - root - INFO - Epoch mean loss: 0.0001762388399629051
+2023-03-06 13:04:18,617 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002529565433086482, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002358132313843602
+2023-03-06 13:04:18,632 - root - INFO - start 5 epoch
+2023-03-06 13:05:12,053 - root - INFO - epoch: 5 took 53.43s
+2023-03-06 13:05:12,054 - root - INFO - Epoch mean loss: 0.00014663044752906654
+2023-03-06 13:05:12,054 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00023974208020194498, new node val loss base: 0.00019404371638802434, new node val loss: 0.00021287555997349548
+2023-03-06 13:05:12,054 - root - INFO - No improvement over 5 epochs, stop training
+2023-03-06 13:05:12,054 - root - INFO - Loading the best model at epoch 0
+2023-03-06 13:05:12,059 - root - INFO - Loaded the best model at epoch 0 for inference
+2023-03-06 13:05:18,084 - root - INFO - Test statistics: Old nodes -- loss base: 0.0001978986621009706
+2023-03-06 13:05:18,084 - root - INFO - Test statistics: Old nodes -- loss: 0.0007582228885870166
+2023-03-06 13:05:18,084 - root - INFO - Test statistics: New nodes -- loss base: 0.0001952443265171422
+2023-03-06 13:05:18,084 - root - INFO - Test statistics: New nodes -- loss: 0.000745190810937668
+2023-03-06 13:05:18,084 - root - INFO - Saving the model
+2023-03-06 13:05:18,148 - root - INFO - TGN model saved
+2023-03-06 13:05:18,148 - root - INFO - Run 1, elapsed time: 325.9990384578705 seconds.
+2023-03-06 13:05:18,148 - root - INFO - ************************************
+2023-03-06 13:05:18,148 - root - INFO - ********** Run 2 starts. **********
+2023-03-06 13:05:18,172 - root - INFO - num of training instances: 278721
+2023-03-06 13:05:18,172 - root - INFO - num of batches per epoch: 1394
+2023-03-06 13:05:18,173 - root - INFO - start 0 epoch
+2023-03-06 13:06:11,868 - root - INFO - epoch: 0 took 53.69s
+2023-03-06 13:06:11,868 - root - INFO - Epoch mean loss: 0.007957541764543209
+2023-03-06 13:06:11,868 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00047323256776377943, new node val loss base: 0.00019404371638802434, new node val loss: 0.0005610513427734181
+2023-03-06 13:06:11,882 - root - INFO - start 1 epoch
+2023-03-06 13:07:05,030 - root - INFO - epoch: 1 took 53.15s
+2023-03-06 13:07:05,030 - root - INFO - Epoch mean loss: 0.00046835487343651954
+2023-03-06 13:07:05,030 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00023933173635779775, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002427265955141345
+2023-03-06 13:07:05,045 - root - INFO - start 2 epoch
+2023-03-06 13:07:58,156 - root - INFO - epoch: 2 took 53.12s
+2023-03-06 13:07:58,156 - root - INFO - Epoch mean loss: 0.0002577677516711633
+2023-03-06 13:07:58,156 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00025114715056954757, new node val loss base: 0.00019404371638802434, new node val loss: 0.00033107718852684224
+2023-03-06 13:07:58,169 - root - INFO - start 3 epoch
+2023-03-06 13:08:51,817 - root - INFO - epoch: 3 took 53.65s
+2023-03-06 13:08:51,817 - root - INFO - Epoch mean loss: 0.00019600064339477465
+2023-03-06 13:08:51,817 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00027955914273191686, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002582003649403819
+2023-03-06 13:08:51,830 - root - INFO - start 4 epoch
+2023-03-06 13:09:44,115 - root - INFO - epoch: 4 took 52.29s
+2023-03-06 13:09:44,115 - root - INFO - Epoch mean loss: 0.00029872909766192306
+2023-03-06 13:09:44,115 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002200614136669032, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002082396413798724
+2023-03-06 13:09:44,129 - root - INFO - start 5 epoch
+2023-03-06 13:10:37,265 - root - INFO - epoch: 5 took 53.14s
+2023-03-06 13:10:37,265 - root - INFO - Epoch mean loss: 0.00013807752605112872
+2023-03-06 13:10:37,265 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00022220644291790395, new node val loss base: 0.00019404371638802434, new node val loss: 0.00020228041437807373
+2023-03-06 13:10:37,265 - root - INFO - No improvement over 5 epochs, stop training
+2023-03-06 13:10:37,265 - root - INFO - Loading the best model at epoch 0
+2023-03-06 13:10:37,270 - root - INFO - Loaded the best model at epoch 0 for inference
+2023-03-06 13:10:43,294 - root - INFO - Test statistics: Old nodes -- loss base: 0.0001978986621009706
+2023-03-06 13:10:43,294 - root - INFO - Test statistics: Old nodes -- loss: 0.00041952152717472413
+2023-03-06 13:10:43,294 - root - INFO - Test statistics: New nodes -- loss base: 0.0001952443265171422
+2023-03-06 13:10:43,294 - root - INFO - Test statistics: New nodes -- loss: 0.000450348795326411
+2023-03-06 13:10:43,295 - root - INFO - Saving the model
+2023-03-06 13:10:43,368 - root - INFO - TGN model saved
+2023-03-06 13:10:43,368 - root - INFO - Run 2, elapsed time: 325.2197389602661 seconds.
+2023-03-06 13:10:43,368 - root - INFO - ************************************
+2023-03-06 13:10:43,368 - root - INFO - ********** Run 3 starts. **********
+2023-03-06 13:10:43,388 - root - INFO - num of training instances: 278721
+2023-03-06 13:10:43,388 - root - INFO - num of batches per epoch: 1394
+2023-03-06 13:10:43,389 - root - INFO - start 0 epoch
+2023-03-06 13:11:35,724 - root - INFO - epoch: 0 took 52.33s
+2023-03-06 13:11:35,724 - root - INFO - Epoch mean loss: 0.007833889566306035
+2023-03-06 13:11:35,724 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.000515354186957138, new node val loss base: 0.00019404371638802434, new node val loss: 0.0007858704826293458
+2023-03-06 13:11:35,738 - root - INFO - start 1 epoch
+2023-03-06 13:12:26,379 - root - INFO - epoch: 1 took 50.65s
+2023-03-06 13:12:26,380 - root - INFO - Epoch mean loss: 0.0006878449742934191
+2023-03-06 13:12:26,380 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00025166847920575096, new node val loss base: 0.00019404371638802434, new node val loss: 0.0003117657453024863
+2023-03-06 13:12:26,393 - root - INFO - start 2 epoch
+2023-03-06 13:13:17,697 - root - INFO - epoch: 2 took 51.31s
+2023-03-06 13:13:17,697 - root - INFO - Epoch mean loss: 0.0002886094482133164
+2023-03-06 13:13:17,697 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00023912932632124748, new node val loss base: 0.00019404371638802434, new node val loss: 0.0002502281952034792
+2023-03-06 13:13:17,711 - root - INFO - start 3 epoch
+2023-03-06 13:14:11,753 - root - INFO - epoch: 3 took 54.05s
+2023-03-06 13:14:11,753 - root - INFO - Epoch mean loss: 0.00020741668643164574
+2023-03-06 13:14:11,753 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002427149528546546, new node val loss base: 0.00019404371638802434, new node val loss: 0.00023038480136036493
+2023-03-06 13:14:11,766 - root - INFO - start 4 epoch
+2023-03-06 13:15:05,496 - root - INFO - epoch: 4 took 53.74s
+2023-03-06 13:15:05,496 - root - INFO - Epoch mean loss: 0.00024787528247603404
+2023-03-06 13:15:05,496 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00021975718772629705, new node val loss base: 0.00019404371638802434, new node val loss: 0.00020879620269412299
+2023-03-06 13:15:05,511 - root - INFO - start 5 epoch
+2023-03-06 13:15:59,565 - root - INFO - epoch: 5 took 54.06s
+2023-03-06 13:15:59,565 - root - INFO - Epoch mean loss: 0.00014562367135806498
+2023-03-06 13:15:59,565 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00022023656450127635, new node val loss base: 0.00019404371638802434, new node val loss: 0.00020768296634387603
+2023-03-06 13:15:59,565 - root - INFO - No improvement over 5 epochs, stop training
+2023-03-06 13:15:59,565 - root - INFO - Loading the best model at epoch 0
+2023-03-06 13:15:59,570 - root - INFO - Loaded the best model at epoch 0 for inference
+2023-03-06 13:16:05,590 - root - INFO - Test statistics: Old nodes -- loss base: 0.0001978986621009706
+2023-03-06 13:16:05,590 - root - INFO - Test statistics: Old nodes -- loss: 0.00046722173860391537
+2023-03-06 13:16:05,590 - root - INFO - Test statistics: New nodes -- loss base: 0.0001952443265171422
+2023-03-06 13:16:05,590 - root - INFO - Test statistics: New nodes -- loss: 0.0005941453363082326
+2023-03-06 13:16:05,591 - root - INFO - Saving the model
+2023-03-06 13:16:05,654 - root - INFO - TGN model saved
+2023-03-06 13:16:05,654 - root - INFO - Run 3, elapsed time: 322.2862310409546 seconds.
+2023-03-06 13:16:05,654 - root - INFO - ************************************
+2023-03-06 13:16:05,654 - root - INFO - ********** Run 4 starts. **********
+2023-03-06 13:16:05,673 - root - INFO - num of training instances: 278721
+2023-03-06 13:16:05,673 - root - INFO - num of batches per epoch: 1394
+2023-03-06 13:16:05,674 - root - INFO - start 0 epoch
+2023-03-06 13:16:59,447 - root - INFO - epoch: 0 took 53.77s
+2023-03-06 13:16:59,448 - root - INFO - Epoch mean loss: 0.010391839234112214
+2023-03-06 13:16:59,448 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0004939227548223772, new node val loss base: 0.00019404371638802434, new node val loss: 0.0005517472715643839
+2023-03-06 13:16:59,462 - root - INFO - start 1 epoch
+2023-03-06 13:17:53,177 - root - INFO - epoch: 1 took 53.72s
+2023-03-06 13:17:53,177 - root - INFO - Epoch mean loss: 0.0007014754934294051
+2023-03-06 13:17:53,177 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0003893130554104355, new node val loss base: 0.00019404371638802434, new node val loss: 0.0003936806855860989
+2023-03-06 13:17:53,191 - root - INFO - start 2 epoch
+2023-03-06 13:18:46,766 - root - INFO - epoch: 2 took 53.58s
+2023-03-06 13:18:46,766 - root - INFO - Epoch mean loss: 0.00028189583234305553
+2023-03-06 13:18:46,766 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002634571857946589, new node val loss base: 0.00019404371638802434, new node val loss: 0.0003228074982259363
+2023-03-06 13:18:46,780 - root - INFO - start 3 epoch
+2023-03-06 13:19:40,557 - root - INFO - epoch: 3 took 53.78s
+2023-03-06 13:19:40,558 - root - INFO - Epoch mean loss: 0.0002896067575220957
+2023-03-06 13:19:40,558 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.00027125264504413024, new node val loss base: 0.00019404371638802434, new node val loss: 0.00031251201192385907
+2023-03-06 13:19:40,571 - root - INFO - start 4 epoch
+2023-03-06 13:20:34,252 - root - INFO - epoch: 4 took 53.69s
+2023-03-06 13:20:34,253 - root - INFO - Epoch mean loss: 0.00022336637387458568
+2023-03-06 13:20:34,253 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002809709698826874, new node val loss base: 0.00019404371638802434, new node val loss: 0.00027166377176173184
+2023-03-06 13:20:34,268 - root - INFO - start 5 epoch
+2023-03-06 13:21:28,046 - root - INFO - epoch: 5 took 53.79s
+2023-03-06 13:21:28,047 - root - INFO - Epoch mean loss: 0.00019910409599747405
+2023-03-06 13:21:28,047 - root - INFO - val loss base: 0.00021679614163526485, val loss: 0.0002218622291891494, new node val loss base: 0.00019404371638802434, new node val loss: 0.00020313490463579411
+2023-03-06 13:21:28,047 - root - INFO - No improvement over 5 epochs, stop training
+2023-03-06 13:21:28,047 - root - INFO - Loading the best model at epoch 0
+2023-03-06 13:21:28,052 - root - INFO - Loaded the best model at epoch 0 for inference
+2023-03-06 13:21:34,073 - root - INFO - Test statistics: Old nodes -- loss base: 0.0001978986621009706
+2023-03-06 13:21:34,073 - root - INFO - Test statistics: Old nodes -- loss: 0.0004433342325622965
+2023-03-06 13:21:34,073 - root - INFO - Test statistics: New nodes -- loss base: 0.0001952443265171422
+2023-03-06 13:21:34,073 - root - INFO - Test statistics: New nodes -- loss: 0.0004663692608894217
+2023-03-06 13:21:34,073 - root - INFO - Saving the model
+2023-03-06 13:21:34,137 - root - INFO - TGN model saved
+2023-03-06 13:21:34,137 - root - INFO - Run 4, elapsed time: 328.4829432964325 seconds.
