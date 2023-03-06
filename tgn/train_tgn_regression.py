@@ -288,6 +288,11 @@ for i in range(args.n_runs):
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
                                                                         n_neighbors=NUM_NEIGHBORS)
+    
+    nn_val_loss_base = eval_edge_prediction_baseline(model=tgn,
+                                                                        negative_edge_sampler=val_rand_sampler,
+                                                                        data=new_node_val_data,
+                                                                        n_neighbors=NUM_NEIGHBORS)
 
     if USE_MEMORY:
       # Restore memory we had at the end of validation
@@ -311,7 +316,7 @@ for i in range(args.n_runs):
 
     logger.info('epoch: {} took {:.2f}s'.format(epoch, total_epoch_time))
     logger.info('Epoch mean loss: {}'.format(np.mean(m_loss)))
-    logger.info('val loss base: {}, val loss: {}, new node val loss: {}'.format(val_loss_base, val_loss, nn_val_loss))
+    logger.info('val loss base: {}, val loss: {}, new node val loss base: {}, new node val loss: {}'.format(val_loss_base, val_loss, nn_val_loss_base, nn_val_loss))
 
     # Early stopping
     '''if early_stopper.early_stop_check(val_ap):
@@ -334,8 +339,12 @@ for i in range(args.n_runs):
     val_memory_backup = tgn.memory.backup_memory()
 
   ### Test
-  '''tgn.embedding_module.neighbor_finder = full_ngh_finder
+  tgn.embedding_module.neighbor_finder = full_ngh_finder
   test_loss = eval_edge_prediction_modified(model=tgn,
+                                                              negative_edge_sampler=test_rand_sampler,
+                                                              data=test_data,
+                                                              n_neighbors=NUM_NEIGHBORS)
+  test_loss_base = eval_edge_prediction_baseline(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
                                                               n_neighbors=NUM_NEIGHBORS)
@@ -348,9 +357,18 @@ for i in range(args.n_runs):
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
                                                                           n_neighbors=NUM_NEIGHBORS)
+  
+  nn_test_loss_base = eval_edge_prediction_baseline(model=tgn,
+                                                                          negative_edge_sampler=nn_test_rand_sampler,
+                                                                          data=new_node_test_data,
+                                                                          n_neighbors=NUM_NEIGHBORS)
 
   logger.info(
+    'Test statistics: Old nodes -- loss base: {}'.format(test_loss_base))
+  logger.info(
     'Test statistics: Old nodes -- loss: {}'.format(test_loss))
+  logger.info(
+    'Test statistics: New nodes -- loss base: {}'.format(nn_test_loss_base))
   logger.info(
     'Test statistics: New nodes -- loss: {}'.format(nn_test_loss))
 
@@ -364,7 +382,7 @@ for i in range(args.n_runs):
     "train_losses": train_losses,
     "total_epoch_times": total_epoch_times
   }, open(results_path, "wb"))
-'''
+
   logger.info('Saving the model')
   if USE_MEMORY:
     # Restore memory at the end of validation (save a model which is ready for testing)

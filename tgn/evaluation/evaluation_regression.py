@@ -73,6 +73,7 @@ def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbor
         TEST_BATCH_SIZE = batch_size
         num_test_instance = len(data.sources)
         num_test_batch = math.ceil(num_test_instance / TEST_BATCH_SIZE)
+        num_test_batch = num_test_batch -1
 
         for k in range(num_test_batch):
             s_idx = k * TEST_BATCH_SIZE
