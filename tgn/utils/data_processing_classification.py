@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from collections import Counter
 
 class Data:
     def __init__(self, sources, destinations, timestamps, edge_idxs, labels, edge_features):
@@ -76,17 +76,16 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     timestamps = graph_df.ts.values
     edge_features = edge_features[1:]
     
-    deciles = np.percentile(edge_features, np.arange(10, 101, 10))
-    bins = np.digitize(edge_features, deciles)
-    print(bins)
-    result = [edge_features[bins == i] for i in range(0, 10)]
-    for r in result:
-        print(len(r))
-    print(deciles)
-    print(len(edge_features[edge_features < 5]))
-    print(len(edge_features))
-    print(np.max(edge_features))
-    print(np.min(edge_features))
+    # divide into different classes, use 10 classes here
+    deciles = np.percentile(edge_features, np.arange(10, 100, 10))
+    print("All edge values are divided into the following range")
+    print(deciles) 
+    edge_features = np.digitize(edge_features, deciles)
+
+    # count for each class
+    counts = Counter(edge_features.flatten())
+    for num, count in counts.items():
+        print(f"Class {num}: {count} ")
 
     full_data = Data(sources, destinations, timestamps, edge_idxs, labels, edge_features)
 

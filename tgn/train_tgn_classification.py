@@ -9,8 +9,8 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from evaluation.evaluation import eval_edge_prediction_modified
-from model.tgn import TGN
+from evaluation.evaluation_classification import eval_edge_prediction_modified
+from model.tgn_classification import TGN
 from utils.utils import EarlyStopMonitor, RandEdgeSampler, get_neighbor_finder
 from utils.data_processing_classification import get_data, compute_time_statistics
 print('test')
@@ -171,7 +171,7 @@ for i in range(args.n_runs):
             use_destination_embedding_in_message=args.use_destination_embedding_in_message,
             use_source_embedding_in_message=args.use_source_embedding_in_message,
             dyrep=args.dyrep)
-  criterion = torch.nn.BCELoss()
+  criterion = torch.nn.CrossEntropyLoss()
   optimizer = torch.optim.Adam(tgn.parameters(), lr=LEARNING_RATE)
   tgn = tgn.to(device)
 
@@ -182,8 +182,8 @@ for i in range(args.n_runs):
   logger.info('num of batches per epoch: {}'.format(num_batch))
   idx_list = np.arange(num_instance)
 
-  new_nodes_val_aps = []
-  val_aps = []
+  new_nodes_val_f1s = []
+  val_f1s = []
   epoch_times = []
   total_epoch_times = []
   train_losses = []
@@ -225,17 +225,21 @@ for i in range(args.n_runs):
         _, negatives_batch = train_rand_sampler.sample(size)
 
         with torch.no_grad():
-          #pos_label = torch.ones(size, dtype=torch.float, device=device)
-          pos_label = torch.tensor(edge_features_batch, dtype=torch.float, device=device).squeeze()
-          neg_label = torch.zeros(size, dtype=torch.float, device=device)
+
+          neg_label = torch.zeros(size, dtype=torch.long, device=device)
+          pos_label = torch.tensor(edge_features_batch, dtype=torch.long, device=device).squeeze()
+          #print(pos_label.shape)
+          #print(neg_label.shape)
 
         tgn = tgn.train()
         pos_prob = tgn.compute_edge_probabilities_modified(sources_batch, destinations_batch, timestamps_batch,
                                             edge_idxs_batch, True, NUM_NEIGHBORS)
         neg_prob = tgn.compute_edge_probabilities_modified(sources_batch, negatives_batch, timestamps_batch,
                                                            edge_idxs_batch, False, NUM_NEIGHBORS)
+        #print(pos_prob.shape)
+        #print(neg_prob.shape)
 
-        loss += criterion(pos_prob.squeeze(), pos_label) + criterion(neg_prob.squeeze(), neg_label)
+        loss += criterion(pos_prob, pos_label) + criterion(neg_prob, neg_label)
 
       loss /= args.backprop_every
 
@@ -260,7 +264,7 @@ for i in range(args.n_runs):
       # validation on unseen nodes
       train_memory_backup = tgn.memory.backup_memory()
 
-    val_ap, val_auc, val_measures_dict = eval_edge_prediction_modified(model=tgn,
+    val_acc, val_pre, val_rec, val_f1 = eval_edge_prediction_modified(model=tgn,
                                                             negative_edge_sampler=val_rand_sampler,
                                                             data=val_data,
                                                             n_neighbors=NUM_NEIGHBORS)
@@ -272,7 +276,7 @@ for i in range(args.n_runs):
       tgn.memory.restore_memory(train_memory_backup)
 
     # Validate on unseen nodes
-    nn_val_ap, nn_val_auc, nn_val_measures_dict = eval_edge_prediction_modified(model=tgn,
+    nn_val_acc, nn_val_pre, nn_val_rec, nn_val_f1 = eval_edge_prediction_modified(model=tgn,
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
                                                                         n_neighbors=NUM_NEIGHBORS)
@@ -281,14 +285,14 @@ for i in range(args.n_runs):
       # Restore memory we had at the end of validation
       tgn.memory.restore_memory(val_memory_backup)
 
-    new_nodes_val_aps.append(nn_val_ap)
-    val_aps.append(val_ap)
+    new_nodes_val_f1s.append(nn_val_f1)
+    val_f1s.append(val_f1)
     train_losses.append(np.mean(m_loss))
 
     # Save temporary results to disk
     pickle.dump({
-      "val_aps": val_aps,
-      "new_nodes_val_aps": new_nodes_val_aps,
+      "val_f1s": val_f1s,
+      "new_nodes_val_f1s": new_nodes_val_f1s,
       "train_losses": train_losses,
       "epoch_times": epoch_times,
       "total_epoch_times": total_epoch_times
@@ -300,12 +304,16 @@ for i in range(args.n_runs):
     logger.info('epoch: {} took {:.2f}s'.format(epoch, total_epoch_time))
     logger.info('Epoch mean loss: {}'.format(np.mean(m_loss)))
     logger.info(
-      'val auc: {}, new node val auc: {}'.format(val_auc, nn_val_auc))
+      'val acc: {}, new node val acc: {}'.format(val_acc, nn_val_acc))
     logger.info(
-      'val ap: {}, new node val ap: {}'.format(val_ap, nn_val_ap))
+      'val pre: {}, new node val pre: {}'.format(val_pre, nn_val_pre))
+    logger.info(
+      'val rec: {}, new node val rec: {}'.format(val_rec, nn_val_rec))
+    logger.info(
+      'val f1: {}, new node val f1: {}'.format(val_f1, nn_val_f1))
 
     # Early stopping
-    if early_stopper.early_stop_check(val_ap):
+    if early_stopper.early_stop_check(val_f1):
       logger.info('No improvement over {} epochs, stop training'.format(early_stopper.max_round))
       logger.info(f'Loading the best model at epoch {early_stopper.best_epoch}')
       best_model_path = get_checkpoint_path(early_stopper.best_epoch)
@@ -324,7 +332,7 @@ for i in range(args.n_runs):
 
   ### Test
   tgn.embedding_module.neighbor_finder = full_ngh_finder
-  test_ap, test_auc, test_measures_dict = eval_edge_prediction_modified(model=tgn,
+  test_acc, test_pre, test_rec, test_f1 = eval_edge_prediction_modified(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
                                                               n_neighbors=NUM_NEIGHBORS)
@@ -333,33 +341,35 @@ for i in range(args.n_runs):
     tgn.memory.restore_memory(val_memory_backup)
 
   # Test on unseen nodes
-  nn_test_ap, nn_test_auc, nn_test_measures_dict = eval_edge_prediction_modified(model=tgn,
+  nn_test_acc, nn_test_pre, nn_test_rec, nn_test_f1 = eval_edge_prediction_modified(model=tgn,
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
                                                                           n_neighbors=NUM_NEIGHBORS)
 
   logger.info(
-    'Test statistics: Old nodes -- auc_inherent: {}'.format(test_auc))
+    'Test statistics: Old nodes -- acc_inherent: {}'.format(test_acc))
   logger.info(
-      'Test statistics: Old nodes -- ap_inherent: {}'.format(test_ap))
+    'Test statistics: Old nodes -- pre_inherent: {}'.format(test_pre))
   logger.info(
-    'Test statistics: New nodes -- auc_inherent: {}'.format(nn_test_auc))
+      'Test statistics: Old nodes -- rec_inherent: {}'.format(test_rec))
   logger.info(
-      'Test statistics: New nodes -- ap_inherent: {}'.format(nn_test_ap))
-
-  # extra performance measures
-  # Note: just prints out for the Test set!
-  for measure_name, measure_value in test_measures_dict.items():
-      logger.info('Test statistics: Old nodes -- {}: {}'.format(measure_name, measure_value))
-  for measure_name, measure_value in nn_test_measures_dict.items():
-      logger.info('Test statistics: New nodes -- {}: {}'.format(measure_name, measure_value))
+      'Test statistics: Old nodes -- f1_inherent: {}'.format(test_f1))
+  
+  logger.info(
+    'Test statistics: New nodes -- acc_inherent: {}'.format(nn_test_acc))
+  logger.info(
+    'Test statistics: New nodes -- pre_inherent: {}'.format(nn_test_pre))
+  logger.info(
+      'Test statistics: New nodes -- rec_inherent: {}'.format(nn_test_rec))
+  logger.info(
+      'Test statistics: New nodes -- f1_inherent: {}'.format(nn_test_f1))
 
   # Save results for this run
   pickle.dump({
-    "val_aps": val_aps,
-    "new_nodes_val_aps": new_nodes_val_aps,
-    "test_ap": test_ap,
-    "new_node_test_ap": nn_test_ap,
+    "val_f1s": val_f1s,
+    "new_nodes_val_f1s": new_nodes_val_f1s,
+    "test_f1": test_f1,
+    "new_node_test_f1": nn_test_f1,
     "epoch_times": epoch_times,
     "train_losses": train_losses,
     "total_epoch_times": total_epoch_times
