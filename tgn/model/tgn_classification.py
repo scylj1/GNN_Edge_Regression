@@ -23,8 +23,8 @@ class TGN(torch.nn.Module):
                  memory_updater_type="gru",
                  use_destination_embedding_in_message=False,
                  use_source_embedding_in_message=False,
-                 dyrep=False):
-                 # num_class=1):  # MC
+                 dyrep=False,
+                 num_class=10):  
         super(TGN, self).__init__()
 
         self.n_layers = n_layers
@@ -96,9 +96,7 @@ class TGN(torch.nn.Module):
 
         # MLP to compute probability on an edge given two node embeddings
         self.affinity_score = MergeLayer(self.n_node_features, self.n_node_features,
-                                         self.n_node_features,
-                                         10)
-                                         # num_class)  # MC
+                                         self.n_node_features, num_class)  
 
     def compute_temporal_embeddings_original(self, source_nodes, destination_nodes, negative_nodes, edge_times,
                                              edge_idxs, n_neighbors=20):

@@ -22,6 +22,7 @@ parser = argparse.ArgumentParser('TGN self-supervised training')
 parser.add_argument('-d', '--data', type=str, help='Dataset name (eg. wikipedia or reddit)',
                     default='wikipedia')
 parser.add_argument('--bs', type=int, default=200, help='Batch_size')
+parser.add_argument('--num_class', type=int, default=10, help='Number of class')
 parser.add_argument('--prefix', type=str, default='', help='Prefix to name the checkpoints')
 parser.add_argument('--n_degree', type=int, default=10, help='Number of neighbors to sample')
 parser.add_argument('--n_head', type=int, default=2, help='Number of heads used in attention layer')
@@ -116,7 +117,7 @@ logger.info(args)
 
 ### Extract data for training, validation and testing
 node_features, edge_features, full_data, train_data, val_data, test_data, new_node_val_data, \
-new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio,
+new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio, args.num_class, 
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
                               randomize_features=args.randomize_features)
 
@@ -170,7 +171,8 @@ for i in range(args.n_runs):
             mean_time_shift_dst=mean_time_shift_dst, std_time_shift_dst=std_time_shift_dst,
             use_destination_embedding_in_message=args.use_destination_embedding_in_message,
             use_source_embedding_in_message=args.use_source_embedding_in_message,
-            dyrep=args.dyrep)
+            dyrep=args.dyrep,
+            num_class=args.num_class)
   criterion = torch.nn.CrossEntropyLoss()
   optimizer = torch.optim.Adam(tgn.parameters(), lr=LEARNING_RATE)
   tgn = tgn.to(device)

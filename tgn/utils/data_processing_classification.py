@@ -50,7 +50,7 @@ def get_data_node_classification(dataset_name, use_validation=False):
     return full_data, node_features, edge_features, train_data, val_data, test_data
 
 
-def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_val_and_test=False,
+def get_data(dataset_name, val_ratio, test_ratio, num_class, different_new_nodes_between_val_and_test=False,
              randomize_features=False):
     ### Load data and train val test split
     graph_df = pd.read_csv('./data/ml_{}.csv'.format(dataset_name))
@@ -76,8 +76,9 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     timestamps = graph_df.ts.values
     edge_features = edge_features[1:]
     
-    # divide into different classes, use 10 classes here
-    deciles = np.percentile(edge_features, np.arange(10, 100, 10))
+    # divide into different classes
+    percent = 100 // num_class
+    deciles = np.percentile(edge_features, [(i+1) * percent for i in range(num_class-1)])
     print("All edge values are divided into the following range")
     print(deciles) 
     edge_features = np.digitize(edge_features, deciles)
