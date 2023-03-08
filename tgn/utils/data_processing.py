@@ -51,12 +51,12 @@ def get_data_node_classification(dataset_name, use_validation=False):
 
 
 def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_val_and_test=False,
-             randomize_features=False):
+             randomize_features=False, max_normalization=False, logarithmize_weights=False):
     ### Load data and train val test split
     graph_df = pd.read_csv('./data/ml_{}.csv'.format(dataset_name))
     edge_features = np.load('./data/ml_{}.npy'.format(dataset_name))
     node_features = np.load('./data/ml_{}_node.npy'.format(dataset_name))
-    #print(edge_features)
+    # print(edge_features)
     # additional for CAW data specifically
     if dataset_name in ['enron', 'socialevolve', 'uci']:
         node_zero_padding = np.zeros((node_features.shape[0], 172 - node_features.shape[1]))
@@ -77,10 +77,16 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     edge_features = edge_features[1:]
     
     # normalisation
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    edge_features = scaler.fit_transform(edge_features)
-    print(np.mean(edge_features))
-    #print(len(edge_features))
+    if max_normalization:
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        edge_features = scaler.fit_transform(edge_features)
+
+    # logarithmize weights
+    if logarithmize_weights:
+        edge_features = np.log10(edge_features)
+        # if after logarithm, the weight is too low, we set it to 0.001.
+        edge_features = np.maximum(edge_features, 0.001)
+
 
     full_data = Data(sources, destinations, timestamps, edge_idxs, labels, edge_features)
 
