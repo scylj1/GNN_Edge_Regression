@@ -113,7 +113,7 @@ def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbor
             val_loss.append(loss)
         return np.mean(val_loss)
 
-def eval_edge_prediction_baseline(model, negative_edge_sampler, data, n_neighbors, batch_size=200):
+def eval_edge_prediction_baseline(model, negative_edge_sampler, data, n_neighbors, batch_size=200, input_avg=0.0):
     # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same
     # negatives for validation / test set)
     assert negative_edge_sampler.seed is not None
@@ -144,7 +144,7 @@ def eval_edge_prediction_baseline(model, negative_edge_sampler, data, n_neighbor
 
             pred_score = np.concatenate([np.zeros(size), np.zeros(size)])
             true_label = np.concatenate([np.squeeze(np.array(edge_features_batch)), np.zeros(size)])
-            pred_score[:] = 0.0015834864467958803 # average
+            pred_score[:] = input_avg # average
             loss = mean_squared_error(true_label, pred_score)
             val_loss.append(loss)
         return np.mean(val_loss)

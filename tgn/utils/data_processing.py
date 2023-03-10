@@ -78,7 +78,7 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     
     # normalisation
     if max_normalization:
-        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaler = MinMaxScaler(feature_range=(0, 10))
         edge_features = scaler.fit_transform(edge_features)
 
     # logarithmize weights
@@ -86,8 +86,11 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
         edge_features = np.log10(edge_features)
         # if after logarithm, the weight is too low, we set it to 0.001.
         edge_features = np.maximum(edge_features, 0.001)
-
-
+        
+    # calculate the average for baseline evaluation
+    avg = np.mean(edge_features)
+    print(f"Average of edge features is {avg}")
+    
     full_data = Data(sources, destinations, timestamps, edge_idxs, labels, edge_features)
 
     random.seed(2020)
@@ -176,7 +179,7 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
         len(new_test_node_set)))
 
     return node_features, edge_features, full_data, train_data, val_data, test_data, \
-           new_node_val_data, new_node_test_data
+           new_node_val_data, new_node_test_data, avg
 
 
 def compute_time_statistics(sources, destinations, timestamps):

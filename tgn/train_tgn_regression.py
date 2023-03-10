@@ -120,7 +120,7 @@ logger.info(args)
 
 ### Extract data for training, validation and testing
 node_features, edge_features, full_data, train_data, val_data, test_data, new_node_val_data, \
-new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio,
+new_node_test_data, avg = get_data(DATA, args.val_ratio, args.test_ratio,
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
                               randomize_features=args.randomize_features, 
                               max_normalization=args.max_normalization,
@@ -282,7 +282,7 @@ for i in range(args.n_runs):
     val_loss_base = eval_edge_prediction_baseline(model=tgn,
                                                             negative_edge_sampler=val_rand_sampler,
                                                             data=val_data,
-                                                            n_neighbors=NUM_NEIGHBORS)
+                                                            n_neighbors=NUM_NEIGHBORS, input_avg = avg)
     if USE_MEMORY:
       val_memory_backup = tgn.memory.backup_memory()
       # Restore memory we had at the end of training to be used when validating on new nodes.
@@ -299,7 +299,7 @@ for i in range(args.n_runs):
     nn_val_loss_base = eval_edge_prediction_baseline(model=tgn,
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
-                                                                        n_neighbors=NUM_NEIGHBORS)
+                                                                        n_neighbors=NUM_NEIGHBORS, input_avg = avg)
 
     if USE_MEMORY:
       # Restore memory we had at the end of validation
@@ -354,7 +354,7 @@ for i in range(args.n_runs):
   test_loss_base = eval_edge_prediction_baseline(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
-                                                              n_neighbors=NUM_NEIGHBORS)
+                                                              n_neighbors=NUM_NEIGHBORS, input_avg = avg)
 
   if USE_MEMORY:
     tgn.memory.restore_memory(val_memory_backup)
@@ -368,7 +368,7 @@ for i in range(args.n_runs):
   nn_test_loss_base = eval_edge_prediction_baseline(model=tgn,
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
-                                                                          n_neighbors=NUM_NEIGHBORS)
+                                                                          n_neighbors=NUM_NEIGHBORS, input_avg = avg)
 
   logger.info(
     'Test statistics: Old nodes -- loss base: {}'.format(test_loss_base))

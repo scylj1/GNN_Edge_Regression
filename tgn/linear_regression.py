@@ -75,9 +75,9 @@ except:
   
 DATA = args.data
 node_features, edge_features, full_data, train_data, val_data, test_data, new_node_val_data, \
-new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio,
+new_node_test_data, avg = get_data(DATA, args.val_ratio, args.test_ratio,
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
-                              randomize_features=args.randomize_features)
+                              randomize_features=args.randomize_features,max_normalization=False, logarithmize_weights=True)
 
 #print(len(edge_features))
 #print(len(node_features))
@@ -122,12 +122,12 @@ for i, name in enumerate(distinct_list):
   times.append(name)
   for index, t in enumerate(timesta):
     if t == name:
-      edge_value = int(values[index])
-      edge_values.append(int(values[index]))
+      edge_value = (float(values[index]))
+      edge_values.append(float(values[index]))
       
   if len(edge_values) != len(times):
-    edge_value = 0
-    edge_values.append(0)
+    edge_value = 0.0
+    edge_values.append(0.0)
     
   data = data.append(pd.DataFrame({'value':[edge_value],'time':[name]}),ignore_index=True)
 
@@ -177,7 +177,7 @@ print(data['value'])
 print("原始单位根检验:\n")
 print(ADF(data['value'])) #原始
 
-data["diff1"] = data["value"].diff(3).dropna()
+data["diff1"] = data["value"].diff(1).dropna()
 print("一阶单位根检验:\n")
 print(ADF(data.diff1.dropna())) #一阶
 
