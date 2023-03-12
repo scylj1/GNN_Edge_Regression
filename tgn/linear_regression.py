@@ -181,4 +181,10 @@ data["diff1"] = data["value"].diff(1).dropna()
 print("一阶单位根检验:\n")
 print(ADF(data.diff1.dropna())) #一阶
 
+from statsmodels.stats.diagnostic import acorr_ljungbox
+lb=acorr_ljungbox(data["value"].diff(1).dropna(), lags = [i for i in range(1,12)],boxpierce=True)
+print("白噪声检验")
+print(lb)
+
+
     

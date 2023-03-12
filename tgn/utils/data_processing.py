@@ -91,6 +91,10 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     avg = np.mean(edge_features)
     print(f"Average of edge features is {avg}")
     
+    hist, bins = np.histogram(edge_features, bins=50)
+    print(hist)
+    print(bins)
+    
     full_data = Data(sources, destinations, timestamps, edge_idxs, labels, edge_features)
 
     random.seed(2020)

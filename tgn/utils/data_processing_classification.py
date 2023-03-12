@@ -51,7 +51,7 @@ def get_data_node_classification(dataset_name, use_validation=False):
 
 
 def get_data(dataset_name, val_ratio, test_ratio, num_class, different_new_nodes_between_val_and_test=False,
-             randomize_features=False):
+             randomize_features=False, equal_distribution=False):
     ### Load data and train val test split
     graph_df = pd.read_csv('./data/ml_{}.csv'.format(dataset_name))
     edge_features = np.load('./data/ml_{}.npy'.format(dataset_name))
@@ -76,13 +76,21 @@ def get_data(dataset_name, val_ratio, test_ratio, num_class, different_new_nodes
     timestamps = graph_df.ts.values
     edge_features = edge_features[1:]
     
-    # divide into different classes
-    percent = 100 // num_class
-    deciles = np.percentile(edge_features, [(i+1) * percent for i in range(num_class-1)])
-    print("All edge values are divided into the following range")
-    print(deciles) 
-    edge_features = np.digitize(edge_features, deciles)
+    if equal_distribution:
+        # divide into different classes
+        num_class -= 1 # differentiate positive and negative classes
+        percent = 100 // num_class
+        deciles = np.percentile(edge_features, [(i+1) * percent for i in range(num_class-1)])
+        print("All edge values are divided into the following range")
+        print(deciles) 
+        edge_features = np.digitize(edge_features, deciles)
 
+    else: 
+        edge_features = np.log10(edge_features)
+        edge_features = np.maximum(edge_features, 0)
+        edge_features = np.ceil(edge_features)
+
+    edge_features = np.array([[x[0] + 1] for x in edge_features]) # differentiate positive and negative classes
     # count for each class
     counts = Counter(edge_features.flatten())
     for num, count in counts.items():

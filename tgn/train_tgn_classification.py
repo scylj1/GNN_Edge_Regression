@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from evaluation.evaluation_classification import eval_edge_prediction_modified
+from evaluation.evaluation_classification import eval_edge_prediction_modified, eval_edge_prediction_baseline_most
 from model.tgn_classification import TGN
 from utils.utils import EarlyStopMonitor, RandEdgeSampler, get_neighbor_finder
 from utils.data_processing_classification import get_data, compute_time_statistics
@@ -64,6 +64,8 @@ parser.add_argument('--use_source_embedding_in_message', action='store_true',
                     help='Whether to use the embedding of the source node as part of the message')
 parser.add_argument('--dyrep', action='store_true',
                     help='Whether to run the dyrep model')
+parser.add_argument('--equal_distribution', action='store_true',
+                    help='Whether to make each class have almost the same number of samples')
 # additional arguments
 parser.add_argument('--val_ratio', type=float, default=0.15, help='Ratio of the validation data.')
 parser.add_argument('--test_ratio', type=float, default=0.15, help="Ratio of the test data.")
@@ -90,6 +92,9 @@ TIME_DIM = args.time_dim
 USE_MEMORY = args.use_memory
 MESSAGE_DIM = args.message_dim
 MEMORY_DIM = args.memory_dim
+NUM_CLASS = 10
+if args.equal_distribution:
+  NUM_CLASS = args.num_class
 
 
 Path("./saved_models/").mkdir(parents=True, exist_ok=True)
@@ -119,7 +124,8 @@ logger.info(args)
 node_features, edge_features, full_data, train_data, val_data, test_data, new_node_val_data, \
 new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio, args.num_class, 
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
-                              randomize_features=args.randomize_features)
+                              randomize_features=args.randomize_features,
+                              equal_distribution = args.equal_distribution)
 
 # Initialize training neighbor finder to retrieve temporal graph
 train_ngh_finder = get_neighbor_finder(train_data, args.uniform)
@@ -172,7 +178,7 @@ for i in range(args.n_runs):
             use_destination_embedding_in_message=args.use_destination_embedding_in_message,
             use_source_embedding_in_message=args.use_source_embedding_in_message,
             dyrep=args.dyrep,
-            num_class=args.num_class)
+            num_class=NUM_CLASS)
   criterion = torch.nn.CrossEntropyLoss()
   optimizer = torch.optim.Adam(tgn.parameters(), lr=LEARNING_RATE)
   tgn = tgn.to(device)
@@ -270,6 +276,11 @@ for i in range(args.n_runs):
                                                             negative_edge_sampler=val_rand_sampler,
                                                             data=val_data,
                                                             n_neighbors=NUM_NEIGHBORS)
+    
+    val_acc_b, val_pre_b, val_rec_b, val_f1_b = eval_edge_prediction_baseline_most(model=tgn,
+                                                            negative_edge_sampler=val_rand_sampler,
+                                                            data=val_data,
+                                                            n_neighbors=NUM_NEIGHBORS)
     if USE_MEMORY:
       val_memory_backup = tgn.memory.backup_memory()
       # Restore memory we had at the end of training to be used when validating on new nodes.
@@ -279,6 +290,11 @@ for i in range(args.n_runs):
 
     # Validate on unseen nodes
     nn_val_acc, nn_val_pre, nn_val_rec, nn_val_f1 = eval_edge_prediction_modified(model=tgn,
+                                                                        negative_edge_sampler=val_rand_sampler,
+                                                                        data=new_node_val_data,
+                                                                        n_neighbors=NUM_NEIGHBORS)
+    
+    nn_val_acc_b, nn_val_pre_b, nn_val_rec_b, nn_val_f1_b = eval_edge_prediction_baseline_most(model=tgn,
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
                                                                         n_neighbors=NUM_NEIGHBORS)
@@ -313,6 +329,8 @@ for i in range(args.n_runs):
       'val rec: {}, new node val rec: {}'.format(val_rec, nn_val_rec))
     logger.info(
       'val f1: {}, new node val f1: {}'.format(val_f1, nn_val_f1))
+    logger.info(
+      'val f1 base: {}, new node val f1 base: {}'.format(val_f1_b, nn_val_f1_b))
 
     # Early stopping
     if early_stopper.early_stop_check(val_f1):
