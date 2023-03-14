@@ -385,6 +385,16 @@ for i in range(args.n_runs):
   logger.info(
     'Test statistics: Old nodes -- loss base historical average method: {}'.format(test_loss_avg))
   
+  nn_test_loss_last,  nn_test_loss_avg = eval_edge_prediction_baseline_persistence(model=tgn,
+                                                              negative_edge_sampler=nn_test_rand_sampler,
+                                                              data=new_node_test_data,
+                                                              n_neighbors=NUM_NEIGHBORS, train_data = train_data, val_data = val_data)
+  
+  logger.info(
+    'Test statistics: New nodes -- loss base last seen method: {}'.format(nn_test_loss_last))
+  logger.info(
+    'Test statistics: New nodes -- loss base historical average method: {}'.format(nn_test_loss_avg))
+  
   # Save results for this run
   pickle.dump({
     "val_aps": val_aps,

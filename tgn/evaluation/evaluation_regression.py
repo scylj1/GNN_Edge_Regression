@@ -210,7 +210,7 @@ def extract_historical(source_node, dest_node, data):
     # find node with value
     indexes = []
     for index, source in enumerate(data.sources):
-        if (source == (source_node +1)) and (data.destinations[index] == (dest_node+1 )):
+        if (source == (source_node )) and (data.destinations[index] == (dest_node )):
             indexes.append(index)   
     timesta = []
     values = []
