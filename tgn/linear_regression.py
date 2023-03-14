@@ -75,30 +75,31 @@ except:
   
 DATA = args.data
 node_features, edge_features, full_data, train_data, val_data, test_data, new_node_val_data, \
-new_node_test_data, avg = get_data(DATA, args.val_ratio, args.test_ratio,
+new_node_test_data  = get_data(DATA, args.val_ratio, args.test_ratio,
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
-                              randomize_features=args.randomize_features,max_normalization=False, logarithmize_weights=True)
+                              randomize_features=args.randomize_features,max_normalization=False, logarithmize_weights=False)
 
 #print(len(edge_features))
 #print(len(node_features))
 #print(node_features)
 
-#print(train_data.edge_idxs)
+print(train_data.edge_idxs)
 #print(val_data.edge_idxs)
 #print(test_data.edge_idxs)
 
-#print(train_data.sources)
-#print(train_data.destinations)
+print(train_data.sources)
+print(train_data.destinations)
 #print(train_data.timestamps)
 #print(len(train_data.edge_idxs))
-#print(edge_features)
+print(train_data.edge_features)
   
+print(test_data.timestamps)
 # find node with value
 indexes = []
 for index, source in enumerate(train_data.sources):
-  if source == 56 and train_data.destinations[index] == 127:
+  if source == 1 and train_data.destinations[index] == 127:
     indexes.append(index)   
-#print(indexes)
+print(indexes)
 
 
 timesta = []
@@ -107,9 +108,13 @@ for index in indexes:
   #print(edge_features[train_data.edge_idxs[index]])
   #print(train_data.timestamps[index])
   timesta.append(train_data.timestamps[index])
-  values.append(edge_features[train_data.edge_idxs[index]])
+  #values.append(edge_features[train_data.edge_idxs[index]])
+  values.append(train_data.edge_features[index])
 
+print(timesta)
+print(values)
 
+'''
 distinct_list= (Counter(train_data.timestamps).keys())
 #print("List with distinct elements:\n",len(distinct_list))
 data_len = len(distinct_list)
@@ -185,6 +190,5 @@ from statsmodels.stats.diagnostic import acorr_ljungbox
 lb=acorr_ljungbox(data["value"].diff(1).dropna(), lags = [i for i in range(1,12)],boxpierce=True)
 print("白噪声检验")
 print(lb)
-
-
+'''
     

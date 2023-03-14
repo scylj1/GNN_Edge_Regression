@@ -56,13 +56,13 @@ def eval_edge_prediction_original(model, negative_edge_sampler, data, n_neighbor
     return np.mean(val_ap), np.mean(val_auc), avg_measures_dict
 
 
-def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbors, batch_size=200):
+def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbors, batch_size=200, if_pos = False):
     # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same
     # negatives for validation / test set)
     assert negative_edge_sampler.seed is not None
     negative_edge_sampler.reset_random_state()
 
-    val_ap, val_auc, val_loss = [], [], []
+    val_ap, val_auc, val_loss, val_loss_pos = [], [], [], []
     measures_list = []
     with torch.no_grad():
         model = model.eval()
@@ -107,13 +107,19 @@ def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbor
                                                                  pos_e, n_neighbors)
 
             pred_score = np.concatenate([(pos_prob).cpu().numpy(), (neg_prob).cpu().numpy()])
-            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch)), np.zeros(size)])
-            
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch)), np.zeros(size)])          
             loss = mean_squared_error(true_label, pred_score)
             val_loss.append(loss)
+            
+            pred_score = np.concatenate([(pos_prob).cpu().numpy()])
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch))])          
+            loss_pos = mean_squared_error(true_label, pred_score)
+            val_loss_pos.append(loss_pos)
+        if if_pos:
+            return np.mean(val_loss), np.mean(val_loss_pos)
         return np.mean(val_loss)
 
-def eval_edge_prediction_baseline(model, negative_edge_sampler, data, n_neighbors, batch_size=200, input_avg=0.0):
+def eval_edge_prediction_baseline_mean(model, negative_edge_sampler, data, n_neighbors, batch_size=200, input_avg=0.0):
     # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same
     # negatives for validation / test set)
     assert negative_edge_sampler.seed is not None
@@ -142,13 +148,81 @@ def eval_edge_prediction_baseline(model, negative_edge_sampler, data, n_neighbor
 
             size = len(sources_batch)
 
-            pred_score = np.concatenate([np.zeros(size), np.zeros(size)])
-            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch)), np.zeros(size)])
+            pred_score = np.concatenate([np.zeros(size)])
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch))])
             pred_score[:] = input_avg # average
             loss = mean_squared_error(true_label, pred_score)
             val_loss.append(loss)
         return np.mean(val_loss)
+
+def eval_edge_prediction_baseline_persistence(model, negative_edge_sampler, data, n_neighbors, train_data, val_data, batch_size=200):
+    # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same
+    # negatives for validation / test set)
+    assert negative_edge_sampler.seed is not None
+    negative_edge_sampler.reset_random_state()
+
+    val_ap, val_auc, val_loss_last, val_loss_avg = [], [], [], []
+    measures_list = []
+    with torch.no_grad():
+        model = model.eval()
+        # While usually the test batch size is as big as it fits in memory, here we keep it the same
+        # size as the training batch size, since it allows the memory to be updated more frequently,
+        # and later test batches to access information from interactions in previous test batches
+        # through the memory
+        TEST_BATCH_SIZE = batch_size
+        num_test_instance = len(data.sources)
+        num_test_batch = math.ceil(num_test_instance / TEST_BATCH_SIZE)
+
+        for k in range(num_test_batch):
+            s_idx = k * TEST_BATCH_SIZE
+            e_idx = min(num_test_instance, s_idx + TEST_BATCH_SIZE)
+            sources_batch = data.sources[s_idx:e_idx]
+            destinations_batch = data.destinations[s_idx:e_idx]
+            timestamps_batch = data.timestamps[s_idx:e_idx]
+            edge_idxs_batch = data.edge_idxs[s_idx: e_idx]
+            edge_features_batch = data.edge_features[s_idx: e_idx]
+            
+            size = len(sources_batch)
+            
+            pred_last = np.zeros(size)
+            pred_avg = np.zeros(size)
+            
+            for i in range(size):
+                last_seen_train, historical_train = extract_historical(sources_batch[i], destinations_batch[i], train_data)
+                last_seen_val, historical_val = extract_historical(sources_batch[i], destinations_batch[i], val_data)
+                pred_last[i] = last_seen_val
     
+                historical = np.concatenate((historical_train, historical_val))
+                if historical != []:
+                    pred_avg[i] = np.mean(historical)
+
+            pred_score = np.concatenate([np.squeeze(np.array(pred_last))])
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch))])
+            loss = mean_squared_error(true_label, pred_score)
+            val_loss_last.append(loss)
+            
+            pred_score = np.concatenate([np.squeeze(np.array(pred_avg))])
+            loss = mean_squared_error(true_label, pred_score)
+            val_loss_avg.append(loss)
+        return np.mean(val_loss_last), np.mean(val_loss_avg)
+    
+def extract_historical(source_node, dest_node, data):  
+    # find node with value
+    indexes = []
+    for index, source in enumerate(data.sources):
+        if (source == (source_node +1)) and (data.destinations[index] == (dest_node+1 )):
+            indexes.append(index)   
+    timesta = []
+    values = []
+    for index in indexes:
+        timesta.append(data.timestamps[index])
+        values.append(float(data.edge_features[index]))
+    if values != []:
+        return values[-1], values
+    else:
+        return 0, []
+    
+      
 def extract_edge_embeddings(model, negative_edge_sampler, data, n_neighbors, batch_size=200):
     """
     Convention for saving the embedding is as follows:

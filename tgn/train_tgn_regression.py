@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from evaluation.evaluation_regression import eval_edge_prediction_modified, eval_edge_prediction_baseline
+from evaluation.evaluation_regression import eval_edge_prediction_modified, eval_edge_prediction_baseline_mean, eval_edge_prediction_baseline_persistence
 from model.tgn_regression import TGN
 from utils.utils import EarlyStopMonitor, RandEdgeSampler, get_neighbor_finder
 from utils.data_processing import get_data, compute_time_statistics
@@ -120,12 +120,11 @@ logger.info(args)
 
 ### Extract data for training, validation and testing
 node_features, edge_features, full_data, train_data, val_data, test_data, new_node_val_data, \
-new_node_test_data, avg = get_data(DATA, args.val_ratio, args.test_ratio,
+new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio,
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
                               randomize_features=args.randomize_features, 
                               max_normalization=args.max_normalization,
                               logarithmize_weights=args.logarithmize_weights)
-
 #print(len(test_data.sources))
 # Initialize training neighbor finder to retrieve temporal graph
 train_ngh_finder = get_neighbor_finder(train_data, args.uniform)
@@ -181,7 +180,6 @@ for i in range(args.n_runs):
   criterion = torch.nn.MSELoss()
   optimizer = torch.optim.Adam(tgn.parameters(), lr=LEARNING_RATE)
   tgn = tgn.to(device)
-
   num_instance = len(train_data.sources)
   num_batch = math.ceil(num_instance / BATCH_SIZE)
 
@@ -279,10 +277,6 @@ for i in range(args.n_runs):
                                                             negative_edge_sampler=val_rand_sampler,
                                                             data=val_data,
                                                             n_neighbors=NUM_NEIGHBORS)
-    val_loss_base = eval_edge_prediction_baseline(model=tgn,
-                                                            negative_edge_sampler=val_rand_sampler,
-                                                            data=val_data,
-                                                            n_neighbors=NUM_NEIGHBORS, input_avg = avg)
     if USE_MEMORY:
       val_memory_backup = tgn.memory.backup_memory()
       # Restore memory we had at the end of training to be used when validating on new nodes.
@@ -295,11 +289,6 @@ for i in range(args.n_runs):
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
                                                                         n_neighbors=NUM_NEIGHBORS)
-    
-    nn_val_loss_base = eval_edge_prediction_baseline(model=tgn,
-                                                                        negative_edge_sampler=val_rand_sampler,
-                                                                        data=new_node_val_data,
-                                                                        n_neighbors=NUM_NEIGHBORS, input_avg = avg)
 
     if USE_MEMORY:
       # Restore memory we had at the end of validation
@@ -323,7 +312,7 @@ for i in range(args.n_runs):
 
     logger.info('epoch: {} took {:.2f}s'.format(epoch, total_epoch_time))
     logger.info('Epoch mean loss: {}'.format(np.mean(m_loss)))
-    logger.info('val loss base: {}, val loss: {}, new node val loss base: {}, new node val loss: {}'.format(val_loss_base, val_loss, nn_val_loss_base, nn_val_loss))
+    logger.info('val loss: {}, new node val loss: {}'.format(val_loss, nn_val_loss))
 
     # Early stopping
     if early_stopper.early_stop_check(val_loss):
@@ -347,11 +336,14 @@ for i in range(args.n_runs):
 
   ### Test
   tgn.embedding_module.neighbor_finder = full_ngh_finder
-  test_loss = eval_edge_prediction_modified(model=tgn,
+  test_loss, test_loss_pos = eval_edge_prediction_modified(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
-                                                              n_neighbors=NUM_NEIGHBORS)
-  test_loss_base = eval_edge_prediction_baseline(model=tgn,
+                                                              n_neighbors=NUM_NEIGHBORS, if_pos = True)
+  
+  # mean baseline evaluation
+  avg = (np.sum(train_data.edge_features) + np.sum(val_data.edge_features)) / (len(train_data.edge_features) + len(val_data.edge_features))
+  test_loss_mean = eval_edge_prediction_baseline_mean(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
                                                               n_neighbors=NUM_NEIGHBORS, input_avg = avg)
@@ -360,25 +352,39 @@ for i in range(args.n_runs):
     tgn.memory.restore_memory(val_memory_backup)
 
   # Test on unseen nodes
-  nn_test_loss = eval_edge_prediction_modified(model=tgn,
+  nn_test_loss, nn_test_loss_pos = eval_edge_prediction_modified(model=tgn,
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
-                                                                          n_neighbors=NUM_NEIGHBORS)
+                                                                          n_neighbors=NUM_NEIGHBORS, if_pos = True)
   
-  nn_test_loss_base = eval_edge_prediction_baseline(model=tgn,
+  nn_test_loss_mean = eval_edge_prediction_baseline_mean(model=tgn,
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
                                                                           n_neighbors=NUM_NEIGHBORS, input_avg = avg)
 
   logger.info(
-    'Test statistics: Old nodes -- loss base: {}'.format(test_loss_base))
+    'Test statistics: Old nodes -- loss base mean method: {}'.format(test_loss_mean))
   logger.info(
-    'Test statistics: Old nodes -- loss: {}'.format(test_loss))
+    'Test statistics: Old nodes -- TGN positive loss: {}'.format(test_loss_pos))
   logger.info(
-    'Test statistics: New nodes -- loss base: {}'.format(nn_test_loss_base))
+    'Test statistics: New nodes -- loss base mean method: {}'.format(nn_test_loss_mean))
   logger.info(
-    'Test statistics: New nodes -- loss: {}'.format(nn_test_loss))
-
+    'Test statistics: New nodes -- TGN positive loss: {}'.format(nn_test_loss_pos))
+  
+  logger.info(
+    'Test statistics: Old nodes -- TGN overall loss: {}'.format(test_loss))
+  logger.info(
+    'Test statistics: New nodes -- TGN overall loss: {}'.format(nn_test_loss))
+  
+  test_loss_last,  test_loss_avg = eval_edge_prediction_baseline_persistence(model=tgn,
+                                                              negative_edge_sampler=test_rand_sampler,
+                                                              data=test_data,
+                                                              n_neighbors=NUM_NEIGHBORS, train_data = train_data, val_data = val_data)
+  logger.info(
+    'Test statistics: Old nodes -- loss base last seen method: {}'.format(test_loss_last))
+  logger.info(
+    'Test statistics: Old nodes -- loss base historical average method: {}'.format(test_loss_avg))
+  
   # Save results for this run
   pickle.dump({
     "val_aps": val_aps,

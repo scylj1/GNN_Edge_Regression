@@ -86,14 +86,6 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
         edge_features = np.log10(edge_features)
         # if after logarithm, the weight is too low, we set it to 0.001.
         edge_features = np.maximum(edge_features, 0.001)
-        
-    # calculate the average for baseline evaluation
-    avg = np.mean(edge_features)
-    print(f"Average of edge features is {avg}")
-    
-    hist, bins = np.histogram(edge_features, bins=50)
-    print(hist)
-    print(bins)
     
     full_data = Data(sources, destinations, timestamps, edge_idxs, labels, edge_features)
 
@@ -183,7 +175,7 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
         len(new_test_node_set)))
 
     return node_features, edge_features, full_data, train_data, val_data, test_data, \
-           new_node_val_data, new_node_test_data, avg
+           new_node_val_data, new_node_test_data
 
 
 def compute_time_statistics(sources, destinations, timestamps):
