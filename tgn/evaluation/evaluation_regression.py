@@ -204,6 +204,8 @@ def eval_edge_prediction_baseline_persistence(model, negative_edge_sampler, data
             pred_score = np.concatenate([np.squeeze(np.array(pred_avg))])
             loss = mean_squared_error(true_label, pred_score)
             val_loss_avg.append(loss)
+            
+            
         return np.mean(val_loss_last), np.mean(val_loss_avg)
     
 def extract_historical(source_node, dest_node, data):  
