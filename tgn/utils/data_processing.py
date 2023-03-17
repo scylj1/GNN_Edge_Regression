@@ -98,10 +98,10 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
             for x in unique_source:
                 edges = graph_df[(graph_df.u == x) & (graph_df.ts == t)]
                 # Calculate the max weight for these edges
-                max_weight = edges['weight'].max()
-                if max_weight!=0:
+                weight_sum = edges['weight'].sum()
+                if weight_sum!=0:
                     # Divide all edge weights by the max weight
-                    graph_df.loc[(graph_df.u == x) & (graph_df.ts == t), 'weight'] = graph_df['weight'] / max_weight
+                    graph_df.loc[(graph_df.u == x) & (graph_df.ts == t), 'weight'] = graph_df['weight'] / weight_sum
         edge_features = graph_df.weight.values
         edge_features = edge_features.reshape(-1, 1)
 
@@ -115,10 +115,10 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
             for x in unique_des:
                 edges = graph_df[(graph_df.i == x) & (graph_df.ts == t)]
                 # Calculate the max weight for these edges
-                max_weight = edges['weight'].max()
-                if max_weight!=0:
+                weight_sum = edges['weight'].sum()
+                if weight_sum!=0:
                     # Divide all edge weights by the max weight
-                    graph_df.loc[(graph_df.i == x) & (graph_df.ts == t), 'weight'] = graph_df['weight'] / max_weight
+                    graph_df.loc[(graph_df.i == x) & (graph_df.ts == t), 'weight'] = graph_df['weight'] / weight_sum
         edge_features = graph_df.weight.values
         edge_features = edge_features.reshape(-1, 1)
 
