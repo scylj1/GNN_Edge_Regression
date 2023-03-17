@@ -55,10 +55,16 @@ parser.add_argument('--uniform', action='store_true',
                     help='take uniform sampling from temporal neighbors')
 parser.add_argument('--randomize_features', action='store_true',
                     help='Whether to randomize node features')
+
 parser.add_argument('--max_normalization', action='store_true',
                     help='Whether use min max normalization on weights')
 parser.add_argument('--logarithmize_weights', action='store_true',
                     help='Whether to logarithmize weights')
+parser.add_argument('--node_out_normalization', action='store_true',
+                    help='Whether to normalization weights by dividing the largest out edge')
+parser.add_argument('--node_in_normalization', action='store_true',
+                    help='Whether to normalization weights by dividing the largest in edge')
+
 parser.add_argument('--use_destination_embedding_in_message', action='store_true',
                     help='Whether to use the embedding of the destination node as part of the message')
 parser.add_argument('--use_source_embedding_in_message', action='store_true',
@@ -125,7 +131,10 @@ new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio,
                               different_new_nodes_between_val_and_test=args.different_new_nodes,
                               randomize_features=args.randomize_features, 
                               max_normalization=args.max_normalization,
-                              logarithmize_weights=args.logarithmize_weights)
+                              logarithmize_weights=args.logarithmize_weights, 
+                              node_out_normalization=args.node_out_normalization,
+                              node_in_normalization=args.node_in_normalization)
+                              
 #print(len(test_data.sources))
 # Initialize training neighbor finder to retrieve temporal graph
 train_ngh_finder = get_neighbor_finder(train_data, args.uniform)

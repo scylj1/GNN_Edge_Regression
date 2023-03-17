@@ -51,7 +51,8 @@ def get_data_node_classification(dataset_name, use_validation=False):
 
 
 def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_val_and_test=False,
-             randomize_features=False, max_normalization=False, logarithmize_weights=False):
+             randomize_features=False, max_normalization=False, logarithmize_weights=False,
+             node_out_normalization=False, node_in_normalization=False):
     ### Load data and train val test split
     graph_df = pd.read_csv('./data/ml_{}.csv'.format(dataset_name))
     edge_features = np.load('./data/ml_{}.npy'.format(dataset_name))
@@ -87,6 +88,40 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
         # if after logarithm, the weight is too low, we set it to 0.001.
         edge_features = np.maximum(edge_features, 0.001)
     
+    # for a given source node, divide all edges weights by the max edge weight that node has in a timestamp
+    if node_out_normalization:
+        print("Using node_out_normalization...")
+        graph_df['weight'] = edge_features
+        unique_timestamps = graph_df.ts.unique()
+        for t in unique_timestamps:
+            unique_source = graph_df[graph_df.ts == t].u.unique()
+            for x in unique_source:
+                edges = graph_df[(graph_df.u == x) & (graph_df.ts == t)]
+                # Calculate the max weight for these edges
+                max_weight = edges['weight'].max()
+                if max_weight!=0:
+                    # Divide all edge weights by the max weight
+                    graph_df.loc[(graph_df.u == x) & (graph_df.ts == t), 'weight'] = graph_df['weight'] / max_weight
+        edge_features = graph_df.weight.values
+        edge_features = edge_features.reshape(-1, 1)
+
+    # for a given destination node, divide all edges weights by the max edge weight that node has in a timestamp
+    if node_in_normalization:
+        print("Using node_in_normalization...")
+        graph_df['weight'] = edge_features
+        unique_timestamps = graph_df.ts.unique()
+        for t in unique_timestamps:
+            unique_des = graph_df[graph_df.ts == t].i.unique()
+            for x in unique_des:
+                edges = graph_df[(graph_df.i == x) & (graph_df.ts == t)]
+                # Calculate the max weight for these edges
+                max_weight = edges['weight'].max()
+                if max_weight!=0:
+                    # Divide all edge weights by the max weight
+                    graph_df.loc[(graph_df.i == x) & (graph_df.ts == t), 'weight'] = graph_df['weight'] / max_weight
+        edge_features = graph_df.weight.values
+        edge_features = edge_features.reshape(-1, 1)
+
     full_data = Data(sources, destinations, timestamps, edge_idxs, labels, edge_features)
 
     random.seed(2020)
