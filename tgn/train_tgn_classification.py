@@ -13,12 +13,12 @@ from evaluation.evaluation_classification import eval_edge_prediction_modified, 
 from model.tgn_classification import TGN
 from utils.utils import EarlyStopMonitor, RandEdgeSampler, get_neighbor_finder
 from utils.data_processing_classification import get_data, compute_time_statistics
-print('test')
+
 torch.manual_seed(0)
 np.random.seed(0)
 
 ### Argument and global variables
-parser = argparse.ArgumentParser('TGN self-supervised training')
+parser = argparse.ArgumentParser('TGN classification training')
 parser.add_argument('-d', '--data', type=str, help='Dataset name (eg. wikipedia or reddit)',
                     default='wikipedia')
 parser.add_argument('--bs', type=int, default=200, help='Batch_size')
@@ -69,7 +69,8 @@ parser.add_argument('--equal_distribution', action='store_true',
 # additional arguments
 parser.add_argument('--val_ratio', type=float, default=0.15, help='Ratio of the validation data.')
 parser.add_argument('--test_ratio', type=float, default=0.15, help="Ratio of the test data.")
-
+parser.add_argument('--do_baseline', action='store_true',
+                    help='Whether to evaluate using baseline')
 
 try:
   args = parser.parse_args()
@@ -276,11 +277,7 @@ for i in range(args.n_runs):
                                                             negative_edge_sampler=val_rand_sampler,
                                                             data=val_data,
                                                             n_neighbors=NUM_NEIGHBORS)
-    
-    val_acc_b, val_pre_b, val_rec_b, val_f1_b = eval_edge_prediction_baseline_most(model=tgn,
-                                                            negative_edge_sampler=val_rand_sampler,
-                                                            data=val_data,
-                                                            n_neighbors=NUM_NEIGHBORS)
+
     if USE_MEMORY:
       val_memory_backup = tgn.memory.backup_memory()
       # Restore memory we had at the end of training to be used when validating on new nodes.
@@ -290,11 +287,6 @@ for i in range(args.n_runs):
 
     # Validate on unseen nodes
     nn_val_acc, nn_val_pre, nn_val_rec, nn_val_f1 = eval_edge_prediction_modified(model=tgn,
-                                                                        negative_edge_sampler=val_rand_sampler,
-                                                                        data=new_node_val_data,
-                                                                        n_neighbors=NUM_NEIGHBORS)
-    
-    nn_val_acc_b, nn_val_pre_b, nn_val_rec_b, nn_val_f1_b = eval_edge_prediction_baseline_most(model=tgn,
                                                                         negative_edge_sampler=val_rand_sampler,
                                                                         data=new_node_val_data,
                                                                         n_neighbors=NUM_NEIGHBORS)
@@ -329,8 +321,6 @@ for i in range(args.n_runs):
       'val rec: {}, new node val rec: {}'.format(val_rec, nn_val_rec))
     logger.info(
       'val f1: {}, new node val f1: {}'.format(val_f1, nn_val_f1))
-    logger.info(
-      'val f1 base: {}, new node val f1 base: {}'.format(val_f1_b, nn_val_f1_b))
 
     # Early stopping
     if early_stopper.early_stop_check(val_f1):
@@ -383,7 +373,26 @@ for i in range(args.n_runs):
       'Test statistics: New nodes -- rec_inherent: {}'.format(nn_test_rec))
   logger.info(
       'Test statistics: New nodes -- f1_inherent: {}'.format(nn_test_f1))
-
+  
+  if args.do_baseline:
+    test_acc_b, test_pre_b, test_rec_b, test_f1_b = eval_edge_prediction_baseline_most(model=tgn,
+                                                              negative_edge_sampler=test_rand_sampler,
+                                                              data=test_data,
+                                                              n_neighbors=NUM_NEIGHBORS)
+    
+    nn_test_acc_b, nn_test_pre_b, nn_test_rec_b, nn_test_f1_b = eval_edge_prediction_baseline_most(model=tgn,
+                                                                          negative_edge_sampler=test_rand_sampler,
+                                                                          data=test_node_val_data,
+                                                                          n_neighbors=NUM_NEIGHBORS)
+    logger.info(
+        'test acc base: {}, new node test acc base: {}'.format(test_acc_b, nn_test_acc_b))
+    logger.info(
+        'test pre base: {}, new node test pre base: {}'.format(test_pre_b, nn_test_pre_b))
+    logger.info(
+        'test rec base: {}, new node test rec base: {}'.format(test_rec_b, nn_test_rec_b))
+    logger.info(
+        'test f1 base: {}, new node test f1 base: {}'.format(test_f1_b, nn_test_f1_b))
+  
   # Save results for this run
   pickle.dump({
     "val_f1s": val_f1s,
