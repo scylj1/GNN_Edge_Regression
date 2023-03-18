@@ -2,6 +2,7 @@ import numpy as np
 import random
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+from tqdm import tqdm
 
 class Data:
     def __init__(self, sources, destinations, timestamps, edge_idxs, labels, edge_features):
@@ -50,9 +51,12 @@ def get_data_node_classification(dataset_name, use_validation=False):
     return full_data, node_features, edge_features, train_data, val_data, test_data
 
 
+
+
 def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_val_and_test=False,
              randomize_features=False, max_normalization=False, logarithmize_weights=False,
-             node_out_normalization=False, node_in_normalization=False):
+             node_out_normalization=False, node_in_normalization=False, fill_all_edges=False,
+             only_positive_edges=False):
     ### Load data and train val test split
     graph_df = pd.read_csv('./data/ml_{}.csv'.format(dataset_name))
     edge_features = np.load('./data/ml_{}.npy'.format(dataset_name))
@@ -70,13 +74,43 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
 
     val_time, test_time = list(np.quantile(graph_df.ts, [(1 - val_ratio - test_ratio), (1 - test_ratio)]))
 
+    graph_df['weight'] = edge_features[1:]
+
+    # Whether we only keep the positive edges
+    if only_positive_edges:
+        graph_df = graph_df[graph_df.weight != 0]
+        graph_df['idx'] = range(1, len(graph_df)+1)
+
+    # Whether to have a fully connected graph with not existing edges an weight 0
+    if fill_all_edges:
+        all_edges_df = pd.DataFrame(columns=graph_df.columns)
+        print(graph_df)
+        unique_timestamps = graph_df.ts.unique()
+        for t in tqdm(unique_timestamps):
+            unique_sources = pd.unique(graph_df['u'])
+            unique_destinations = pd.unique(graph_df['i'])
+            unique_nodes = np.union1d(unique_sources, unique_destinations)
+            edges = [[x, y, t, 0] for x in unique_nodes for y in unique_nodes]
+            df = pd.DataFrame(edges, columns=['u', 'i', 'ts', 'weight'])
+            all_edges_df = pd.concat([all_edges_df, df], ignore_index=True)
+
+        merged = pd.merge(all_edges_df, graph_df, on=['u', 'i', 'ts'], how='left')
+
+        # fill NaN values in 'w_x' with corresponding values in 'w_y'
+        merged['weight_x'] = merged['weight_y'].fillna(merged['weight_x'])
+
+        all_edges_df = merged[['u', 'i', 'ts', 'weight_x']].rename(columns={'weight_x': 'weight'})
+        all_edges_df['label'] = [0 for _ in range(len(all_edges_df))]
+        all_edges_df['idx'] = range(1, len(all_edges_df)+1)
+        graph_df = all_edges_df
+
     sources = graph_df.u.values
     destinations = graph_df.i.values
     edge_idxs = graph_df.idx.values
     labels = graph_df.label.values
     timestamps = graph_df.ts.values
-    edge_features = edge_features[1:]
-    
+    edge_features = graph_df.weight.values
+
     # normalisation
     if max_normalization:
         scaler = MinMaxScaler(feature_range=(0, 10))
@@ -91,9 +125,8 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     # for a given source node, divide all edges weights by the max edge weight that node has in a timestamp
     if node_out_normalization:
         print("Using node_out_normalization...")
-        graph_df['weight'] = edge_features
         unique_timestamps = graph_df.ts.unique()
-        for t in unique_timestamps:
+        for t in tqdm(unique_timestamps):
             unique_source = graph_df[graph_df.ts == t].u.unique()
             for x in unique_source:
                 edges = graph_df[(graph_df.u == x) & (graph_df.ts == t)]
@@ -108,7 +141,6 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     # for a given destination node, divide all edges weights by the max edge weight that node has in a timestamp
     if node_in_normalization:
         print("Using node_in_normalization...")
-        graph_df['weight'] = edge_features
         unique_timestamps = graph_df.ts.unique()
         for t in unique_timestamps:
             unique_des = graph_df[graph_df.ts == t].i.unique()
