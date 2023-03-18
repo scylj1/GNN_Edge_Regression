@@ -401,7 +401,7 @@ for i in range(args.n_runs):
     logger.info(
       'Test statistics: New nodes -- loss base last seen method: {}, pos loss {}'.format(nn_test_loss_last, nn_test_loss_last_pos))
     logger.info(
-      'Test statistics: New nodes -- loss base historical average method: {}, pos loss {}'.format(nn_test_loss_avg, nn_test_loss_avg))
+      'Test statistics: New nodes -- loss base historical average method: {}, pos loss {}'.format(nn_test_loss_avg, nn_test_loss_avg_pos))
   
   # Save results for this run
   pickle.dump({
