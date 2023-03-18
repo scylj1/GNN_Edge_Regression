@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from evaluation.evaluation_classification import eval_edge_prediction_modified, eval_edge_prediction_baseline_most
+from evaluation.evaluation_classification import eval_edge_prediction_modified, eval_edge_prediction_baseline_most, eval_edge_prediction_baseline_persistence
 from model.tgn_classification import TGN
 from utils.utils import EarlyStopMonitor, RandEdgeSampler, get_neighbor_finder
 from utils.data_processing_classification import get_data, compute_time_statistics
@@ -382,8 +382,9 @@ for i in range(args.n_runs):
     
     nn_test_acc_b, nn_test_pre_b, nn_test_rec_b, nn_test_f1_b = eval_edge_prediction_baseline_most(model=tgn,
                                                                           negative_edge_sampler=test_rand_sampler,
-                                                                          data=test_node_val_data,
+                                                                          data=new_node_test_data,
                                                                           n_neighbors=NUM_NEIGHBORS)
+    
     logger.info(
         'test acc base: {}, new node test acc base: {}'.format(test_acc_b, nn_test_acc_b))
     logger.info(
@@ -392,6 +393,15 @@ for i in range(args.n_runs):
         'test rec base: {}, new node test rec base: {}'.format(test_rec_b, nn_test_rec_b))
     logger.info(
         'test f1 base: {}, new node test f1 base: {}'.format(test_f1_b, nn_test_f1_b))
+    
+    val_acc, val_pre, val_rec, val_f1, val_acc_avg, val_pre_avg, val_rec_avg, val_f1_avg = eval_edge_prediction_baseline_persistence(model=tgn,
+                                                                negative_edge_sampler=test_rand_sampler,
+                                                                data=test_data,
+                                                                n_neighbors=NUM_NEIGHBORS, train_data = train_data, val_data = val_data)
+    logger.info(
+      'Test statistics: Old nodes -- base last seen method: acc{}, pre{}, rec{}, f1{}'.format(val_acc, val_pre, val_rec, val_f1))
+    logger.info(
+      'Test statistics: Old nodes -- base historical average method: acc{}, pre{}, rec{}, f1{}'.format(val_acc_avg, val_pre_avg, val_rec_avg, val_f1_avg))
   
   # Save results for this run
   pickle.dump({

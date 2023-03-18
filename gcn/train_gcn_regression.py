@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument('--seeds', type=int, default=0, help='seeds')
     parser.add_argument('--n_epoch', type=int, default=200, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
-    parser.add_argument('--patience', type=int, default=10, help='Patience for early stopping')
+    parser.add_argument('--patience', type=int, default=5, help='Patience for early stopping')
     parser.add_argument('--prefix', type=str, default='', help='Prefix to name the checkpoints')
     parser.add_argument('--max_normalization', action='store_true',
                         help='Whether use min max normalization on weights')
@@ -71,8 +71,22 @@ def process_data(args, device):
     train_data = wrap_data(train_x[0], edge_index_source, edge_index_dest, train_edge.reshape((-1, train_edge.shape[-1])))
     val_data = wrap_data(val_x[0], edge_index_source, edge_index_dest, val_edge.reshape((-1, val_edge.shape[-1])))
     test_data = wrap_data(test_x[0], edge_index_source, edge_index_dest, test_edge.reshape((-1, test_edge.shape[-1])))
+    
+    test_edge_pos = test_edge.reshape((-1, test_edge.shape[-1]))
+    
+    neg_index = []
+    for i in range(len(test_edge_pos)):
+        if all(element == 0 for element in test_edge_pos[i]):
+            neg_index.append(i)
+  
+    test_edge_pos = np.delete(test_edge_pos, neg_index, axis=0)
+    edge_index_source_pos = np.delete(edge_index_source, neg_index, axis=0)
+    edge_index_dest_pos = np.delete(edge_index_dest, neg_index, axis=0)
+    
+    test_data_pos = wrap_data(test_x[0], edge_index_source_pos, edge_index_dest_pos, test_edge_pos)
+    
 
-    return train_data.to(device), val_data.to(device), test_data.to(device)
+    return train_data.to(device), val_data.to(device), test_data.to(device), test_data_pos.to(device)
 
 def wrap_data(x, edge_source, edge_dest, edge_attr):
     x = torch.tensor(x, dtype=torch.float)
@@ -107,7 +121,7 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # data processing
-    train_data, val_data, test_data = process_data(args, device)
+    train_data, val_data, test_data, test_data_pos = process_data(args, device)
     train_loader = DataLoader([train_data], batch_size=args.bs, shuffle=True)
 
     # model initilisation
@@ -146,6 +160,10 @@ def main():
         pred = model(test_data)
         loss = edge_regression_loss(pred, test_data.edge_attr)
         print(f"Test loss: {loss:.4f}")
+        
+        pred = model(test_data_pos)
+        loss = edge_regression_loss(pred, test_data_pos.edge_attr)
+        print(f"Test loss postive: {loss:.4f}")
     
 
 if  __name__=="__main__":
