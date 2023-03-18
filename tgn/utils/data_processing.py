@@ -109,7 +109,7 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
     edge_idxs = graph_df.idx.values
     labels = graph_df.label.values
     timestamps = graph_df.ts.values
-    edge_features = graph_df.weight.values
+    edge_features = graph_df.weight.values.reshape(-1,1)
 
     # normalisation
     if max_normalization:
