@@ -55,7 +55,20 @@ parser.add_argument('--uniform', action='store_true',
                     help='take uniform sampling from temporal neighbors')
 parser.add_argument('--randomize_features', action='store_true',
                     help='Whether to randomize node features')
+parser.add_argument('--use_destination_embedding_in_message', action='store_true',
+                    help='Whether to use the embedding of the destination node as part of the message')
+parser.add_argument('--use_source_embedding_in_message', action='store_true',
+                    help='Whether to use the embedding of the source node as part of the message')
+parser.add_argument('--dyrep', action='store_true',
+                    help='Whether to run the dyrep model')
 
+# Additional arguments
+parser.add_argument('--val_ratio', type=float, default=0.15, help='Ratio of the validation data.')
+parser.add_argument('--test_ratio', type=float, default=0.15, help="Ratio of the test data.")
+parser.add_argument('--do_baseline', action='store_true',
+                    help='Whether to evaluate using baseline')
+parser.add_argument('--no_negative_sampling', action='store_true',
+                    help='Whether to do negative sampling')
 parser.add_argument('--max_normalization', action='store_true',
                     help='Whether use min max normalization on weights')
 parser.add_argument('--logarithmize_weights', action='store_true',
@@ -64,26 +77,12 @@ parser.add_argument('--node_out_normalization', action='store_true',
                     help='Whether to normalization weights by dividing the largest out edge')
 parser.add_argument('--node_in_normalization', action='store_true',
                     help='Whether to normalization weights by dividing the largest in edge')
-
 parser.add_argument('--fill_all_edges', action='store_true',
                     help='Whether to fill the edges that are not in the dataset')
 parser.add_argument('--only_positive_edges', action='store_true',
                     help='Whether to only keep the positive edges')
 
-parser.add_argument('--use_destination_embedding_in_message', action='store_true',
-                    help='Whether to use the embedding of the destination node as part of the message')
-parser.add_argument('--use_source_embedding_in_message', action='store_true',
-                    help='Whether to use the embedding of the source node as part of the message')
-parser.add_argument('--dyrep', action='store_true',
-                    help='Whether to run the dyrep model')
-# additional arguments
-parser.add_argument('--val_ratio', type=float, default=0.15, help='Ratio of the validation data.')
-parser.add_argument('--test_ratio', type=float, default=0.15, help="Ratio of the test data.")
-parser.add_argument('--do_baseline', action='store_true',
-                    help='Whether to evaluate using baseline')
-parser.add_argument('--no_negative_sampling', action='store_true',
-                    help='Whether to do negative sampling')
-
+                    
 torch.manual_seed(0)
 np.random.seed(0)
 try:
