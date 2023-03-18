@@ -65,6 +65,11 @@ parser.add_argument('--node_out_normalization', action='store_true',
 parser.add_argument('--node_in_normalization', action='store_true',
                     help='Whether to normalization weights by dividing the largest in edge')
 
+parser.add_argument('--fill_all_edges', action='store_true',
+                    help='Whether to fill the edges that are not in the dataset')
+parser.add_argument('--only_positive_edges', action='store_true',
+                    help='Whether to only keep the positive edges')
+
 parser.add_argument('--use_destination_embedding_in_message', action='store_true',
                     help='Whether to use the embedding of the destination node as part of the message')
 parser.add_argument('--use_source_embedding_in_message', action='store_true',
@@ -135,7 +140,9 @@ new_node_test_data = get_data(DATA, args.val_ratio, args.test_ratio,
                               max_normalization=args.max_normalization,
                               logarithmize_weights=args.logarithmize_weights, 
                               node_out_normalization=args.node_out_normalization,
-                              node_in_normalization=args.node_in_normalization)
+                              node_in_normalization=args.node_in_normalization,
+                              only_positive_edges=args.only_positive_edges,
+                              fill_all_edges=args.fill_all_edges)
                               
 #print(len(test_data.sources))
 # Initialize training neighbor finder to retrieve temporal graph
