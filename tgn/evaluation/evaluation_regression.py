@@ -118,6 +118,66 @@ def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbor
         if if_pos:
             return np.mean(val_loss), np.mean(val_loss_pos)
         return np.mean(val_loss)
+    
+def eval_edge_prediction_no_sampling(model, data, n_neighbors, batch_size=200, if_pos = False):
+
+    val_ap, val_auc, val_loss, val_loss_pos = [], [], [], []
+    measures_list = []
+    with torch.no_grad():
+        model = model.eval()
+        # While usually the test batch size is as big as it fits in memory, here we keep it the same
+        # size as the training batch size, since it allows the memory to be updated more frequently,
+        # and later test batches to access information from interactions in previous test batches
+        # through the memory
+        TEST_BATCH_SIZE = batch_size
+        num_test_instance = len(data.sources)
+        num_test_batch = math.ceil(num_test_instance / TEST_BATCH_SIZE)
+        num_test_batch = num_test_batch -1
+
+        for k in range(num_test_batch):
+            s_idx = k * TEST_BATCH_SIZE
+            e_idx = min(num_test_instance, s_idx + TEST_BATCH_SIZE)
+            sources_batch = data.sources[s_idx:e_idx]
+            destinations_batch = data.destinations[s_idx:e_idx]
+            timestamps_batch = data.timestamps[s_idx:e_idx]
+            edge_idxs_batch = data.edge_idxs[s_idx: e_idx]
+            edge_features_batch = data.edge_features[s_idx: e_idx]
+
+            size = len(sources_batch)
+            
+            neg_index = []
+            for i in range(len(edge_features_batch)):
+                if i < 0.000001:
+                    neg_index.append(i)
+        
+            edge_neg_batch = np.delete(edge_features_batch, neg_index, axis=0)
+            sources_neg_batch = np.delete(sources_batch, neg_index, axis=0)
+            destinations_neg_batch = np.delete(destinations_batch, neg_index, axis=0)
+            timestamps_neg_batch = np.delete(timestamps_batch, neg_index, axis=0)
+            edge_idxs_neg_batch = np.delete(edge_idxs_batch, neg_index, axis=0)
+
+            pos_e = True
+            pos_prob = model.compute_edge_probabilities_modified(sources_batch, destinations_batch, timestamps_batch,
+                                                                 edge_idxs_batch,
+                                                                 pos_e, n_neighbors)
+            
+            pred_score = np.concatenate([(pos_prob).cpu().numpy()])
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch))])          
+            loss = mean_squared_error(true_label, pred_score)
+            val_loss.append(loss_pos)
+            
+            pos_prob = model.compute_edge_probabilities_modified(sources_neg_batch, destinations_neg_batch, timestamps_neg_batch,
+                                                                 edge_idxs_neg_batch,
+                                                                 pos_e, n_neighbors)
+            
+            pred_score = np.concatenate([(pos_prob).cpu().numpy()])
+            true_label = np.concatenate([np.squeeze(np.array(edge_neg_batch))])          
+            loss = mean_squared_error(true_label, pred_score)
+            val_loss_pos.append(loss_pos)
+                        
+        if if_pos:
+            return np.mean(val_loss), np.mean(val_loss_pos)
+        return np.mean(val_loss)
 
 def eval_edge_prediction_baseline_mean(model, negative_edge_sampler, data, n_neighbors, batch_size=200, input_avg=0.0, if_pos = False):
     # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same

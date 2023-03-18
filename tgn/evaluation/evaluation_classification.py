@@ -57,13 +57,13 @@ def eval_edge_prediction_original(model, negative_edge_sampler, data, n_neighbor
     return np.mean(val_ap), np.mean(val_auc), avg_measures_dict
 
 
-def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbors, batch_size=200):
+def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbors, batch_size=200, if_pos = False):
     # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same
     # negatives for validation / test set)
     assert negative_edge_sampler.seed is not None
     negative_edge_sampler.reset_random_state()
 
-    val_acc, val_pre, val_rec, val_f1 = [], [], [], []
+    val_acc, val_pre, val_rec, val_f1, val_acc_pos, val_f1_pos = [], [], [], [], [], []
     measures_list = []
     with torch.no_grad():
         model = model.eval()
@@ -105,37 +105,38 @@ def eval_edge_prediction_modified(model, negative_edge_sampler, data, n_neighbor
                                                                  timestamps_batch,
                                                                  edge_idxs_batch,
                                                                  pos_e, n_neighbors)
-            #print(pos_prob)
             pos_prob = F.softmax(pos_prob, dim=1)
             neg_prob = F.softmax(neg_prob, dim=1)
-            #print(pos_prob)
+
             pred_labels = torch.argmax(pos_prob, dim=1)
             pred_labels = pred_labels.view(-1, 1)
             neg_labels = torch.argmax(neg_prob, dim=1)
             neg_labels = neg_labels.view(-1, 1)
-            #print(pred_labels) 
-            #print(pred_labels.shape)
 
             pred_score = np.concatenate([(pred_labels).cpu().numpy()])
-            #print(pred_score.size)
-
             true_label = np.concatenate([np.squeeze(np.array(edge_features_batch))])
-            #print(true_label.size)
+            
+            val_acc_pos.append(accuracy_score(true_label, pred_score))
+            val_f1_pos.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))
+            
+            pred_score = np.concatenate([(pred_labels).cpu().numpy(), (neg_labels).cpu().numpy()])
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch)), np.zeros(size)])
             
             val_acc.append(accuracy_score(true_label, pred_score))
             val_pre.append(precision_score(true_label, pred_score,average='weighted',zero_division=0))
             val_rec.append(recall_score(true_label, pred_score,average='weighted',zero_division=0))
             val_f1.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))
-
+    if if_pos:
+        return np.mean(val_acc), np.mean(val_acc_pos), np.mean(val_f1), np.mean(val_f1_pos)
     return np.mean(val_acc), np.mean(val_pre), np.mean(val_rec), np.mean(val_f1)
 
-def eval_edge_prediction_baseline_most(model, negative_edge_sampler, data, n_neighbors, batch_size=200):
+def eval_edge_prediction_baseline_most(model, negative_edge_sampler, data, n_neighbors, batch_size=200, if_pos = False):
     # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same
     # negatives for validation / test set)
     assert negative_edge_sampler.seed is not None
     negative_edge_sampler.reset_random_state()
 
-    val_acc, val_pre, val_rec, val_f1 = [], [], [], []
+    val_acc, val_pre, val_rec, val_f1, val_acc_pos, val_f1_pos = [], [], [], [], [], []
     measures_list = []
     with torch.no_grad():
         model = model.eval()
@@ -163,21 +164,31 @@ def eval_edge_prediction_baseline_most(model, negative_edge_sampler, data, n_nei
             pred_score = np.concatenate([pos])
             true_label = np.concatenate([np.squeeze(np.array(edge_features_batch))])
    
+            val_acc_pos.append(accuracy_score(true_label, pred_score))
+            val_f1_pos.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))
+            
+            pos = np.zeros(size)
+            pos[:] = 5.0
+            pred_score = np.concatenate([pos, pos])
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch)), np.zeros(size)])
             val_acc.append(accuracy_score(true_label, pred_score))
+            val_f1.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))
             val_pre.append(precision_score(true_label, pred_score,average='weighted',zero_division=0))
             val_rec.append(recall_score(true_label, pred_score,average='weighted',zero_division=0))
-            val_f1.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))
+            
+        if if_pos:
+            return np.mean(val_acc), np.mean(val_acc_pos), np.mean(val_f1), np.mean(val_f1_pos)
 
     return np.mean(val_acc), np.mean(val_pre), np.mean(val_rec), np.mean(val_f1)
 
-def eval_edge_prediction_baseline_persistence(model, negative_edge_sampler, data, n_neighbors, train_data, val_data, batch_size=200):
+def eval_edge_prediction_baseline_persistence(model, negative_edge_sampler, data, n_neighbors, train_data, val_data, batch_size=200, if_pos = False):
     # Ensures the random sampler uses a seed for evaluation (i.e. we sample always the same
     # negatives for validation / test set)
     assert negative_edge_sampler.seed is not None
     negative_edge_sampler.reset_random_state()
 
-    val_acc, val_pre, val_rec, val_f1 = [], [], [], []
-    val_acc_avg, val_pre_avg, val_rec_avg, val_f1_avg = [], [], [], []
+    val_acc, val_pre, val_rec, val_f1, val_acc_pos, val_f1_pos = [], [], [], [], [], []
+    val_acc_avg, val_pre_avg, val_rec_avg, val_f1_avg, val_acc_avg_pos, val_f1_avg_pos = [], [], [], [], [], []
     measures_list = []
     with torch.no_grad():
         model = model.eval()
@@ -200,6 +211,15 @@ def eval_edge_prediction_baseline_persistence(model, negative_edge_sampler, data
             
             size = len(sources_batch)
             
+            if negative_edge_sampler.neg_sample != 'rnd':
+                negative_samples_sources, negative_samples_destinations = \
+                    negative_edge_sampler.sample(size,
+                                                 timestamps_batch[0],
+                                                 timestamps_batch[-1])
+            else:
+                negative_samples_sources, negative_samples_destinations = negative_edge_sampler.sample(size)
+                negative_samples_sources = sources_batch
+            
             pred_last = np.zeros(size)
             pred_avg = np.zeros(size)
             
@@ -214,17 +234,47 @@ def eval_edge_prediction_baseline_persistence(model, negative_edge_sampler, data
 
             pred_score = np.concatenate([np.squeeze(np.array(pred_last))])
             true_label = np.concatenate([np.squeeze(np.array(edge_features_batch))])
+            pred_score = np.array(pred_score).astype(int)
+            true_label = np.array(true_label).astype(int)
+            val_acc_pos.append(accuracy_score(true_label, pred_score))
+            val_f1_pos.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))
+            
+            pred_score = np.concatenate([np.squeeze(np.array(pred_avg))])
+            pred_score = np.array(pred_score).astype(int)
+            val_acc_avg_pos.append(accuracy_score(true_label, pred_score))
+            val_f1_avg_pos.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))     
+            
+            # evaluate negative
+            pred_last_neg = np.zeros(size)
+            pred_avg_neg = np.zeros(size)
+            
+            for i in range(size):
+                last_seen_train, historical_train = extract_historical(negative_samples_sources[i], negative_samples_destinations[i], train_data)
+                last_seen_val, historical_val = extract_historical(negative_samples_sources[i], negative_samples_destinations[i], val_data)
+                pred_last_neg[i] = last_seen_val
+    
+                historical = np.concatenate((historical_train, historical_val))
+                if historical != []:
+                    pred_avg_neg[i] = np.mean(historical)
+
+            pred_score = np.concatenate([np.squeeze(np.array(pred_last)), np.squeeze(np.array(pred_last_neg))])
+            true_label = np.concatenate([np.squeeze(np.array(edge_features_batch)), np.zeros(size)])
+            true_label = np.array(true_label).astype(int)
+            pred_score = np.array(pred_score).astype(int)
             val_acc.append(accuracy_score(true_label, pred_score))
             val_pre.append(precision_score(true_label, pred_score,average='weighted',zero_division=0))
             val_rec.append(recall_score(true_label, pred_score,average='weighted',zero_division=0))
             val_f1.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))
             
-            pred_score = np.concatenate([np.squeeze(np.array(pred_avg))])
+            pred_score = np.concatenate([np.squeeze(np.array(pred_avg)), np.squeeze(np.array(pred_avg_neg))])
+            pred_score = np.array(pred_score).astype(int)
             val_acc_avg.append(accuracy_score(true_label, pred_score))
             val_pre_avg.append(precision_score(true_label, pred_score,average='weighted',zero_division=0))
             val_rec_avg.append(recall_score(true_label, pred_score,average='weighted',zero_division=0))
-            val_f1_avg.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))           
+            val_f1_avg.append(f1_score(true_label, pred_score,average='weighted',zero_division=0))        
             
+        if if_pos:
+            return np.mean(val_acc), np.mean(val_acc_pos), np.mean(val_f1), np.mean(val_f1_pos), np.mean(val_acc_avg), np.mean(val_acc_avg_pos), np.mean(val_f1_avg), np.mean(val_f1_avg_pos)
         return np.mean(val_acc), np.mean(val_pre), np.mean(val_rec), np.mean(val_f1), np.mean(val_acc_avg), np.mean(val_pre_avg), np.mean(val_rec_avg), np.mean(val_f1_avg)
     
 def extract_historical(source_node, dest_node, data):  

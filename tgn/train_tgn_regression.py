@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from evaluation.evaluation_regression import eval_edge_prediction_modified, eval_edge_prediction_baseline_mean, eval_edge_prediction_baseline_persistence
+from evaluation.evaluation_regression import eval_edge_prediction_modified, eval_edge_prediction_baseline_mean, eval_edge_prediction_baseline_persistence, eval_edge_prediction_no_sampling
 from model.tgn_regression import TGN
 from utils.utils import EarlyStopMonitor, RandEdgeSampler, get_neighbor_finder
 from utils.data_processing import get_data, compute_time_statistics
@@ -351,14 +351,14 @@ for i in range(args.n_runs):
   ### Test
   tgn.embedding_module.neighbor_finder = full_ngh_finder
   if args.no_negative_sampling:
-    test_loss, test_loss_pos = eval_edge_prediction_modified(model=tgn,
+    test_loss, test_loss_pos = eval_edge_prediction_no_sampling(model=tgn,
                                                                 data=test_data,
                                                                 n_neighbors=NUM_NEIGHBORS, if_pos = True)
     if USE_MEMORY:
       tgn.memory.restore_memory(val_memory_backup)
 
     # Test on unseen nodes
-    nn_test_loss, nn_test_loss_pos = eval_edge_prediction_modified(model=tgn,
+    nn_test_loss, nn_test_loss_pos = eval_edge_prediction_no_sampling(model=tgn,
                                                                             data=new_node_test_data,
                                                                             n_neighbors=NUM_NEIGHBORS, if_pos = True)
   else:

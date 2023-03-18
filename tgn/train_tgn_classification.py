@@ -16,7 +16,7 @@ from utils.data_processing_classification import get_data, compute_time_statisti
 
 torch.manual_seed(0)
 np.random.seed(0)
-
+  
 ### Argument and global variables
 parser = argparse.ArgumentParser('TGN classification training')
 parser.add_argument('-d', '--data', type=str, help='Dataset name (eg. wikipedia or reddit)',
@@ -155,7 +155,10 @@ device = torch.device(device_string)
 mean_time_shift_src, std_time_shift_src, mean_time_shift_dst, std_time_shift_dst = \
   compute_time_statistics(full_data.sources, full_data.destinations, full_data.timestamps)
 
+seeds = [0, 42, 123, 3456, 57456]
 for i in range(args.n_runs):
+  torch.manual_seed(seeds[i])
+  np.random.seed(seeds[i])
   start_time_run = time.time()
   logger.info("************************************")
   logger.info("********** Run {} starts. **********".format(i))
@@ -196,7 +199,7 @@ for i in range(args.n_runs):
   epoch_times = []
   total_epoch_times = []
   train_losses = []
-
+  
   early_stopper = EarlyStopMonitor(max_round=args.patience)
   for epoch in range(NUM_EPOCH):
     start_epoch = time.time()
@@ -342,66 +345,75 @@ for i in range(args.n_runs):
 
   ### Test
   tgn.embedding_module.neighbor_finder = full_ngh_finder
-  test_acc, test_pre, test_rec, test_f1 = eval_edge_prediction_modified(model=tgn,
+  test_acc, test_acc_pos, test_f1, test_f1_pos = eval_edge_prediction_modified(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
-                                                              n_neighbors=NUM_NEIGHBORS)
+                                                              n_neighbors=NUM_NEIGHBORS, if_pos = True)
 
   if USE_MEMORY:
     tgn.memory.restore_memory(val_memory_backup)
 
   # Test on unseen nodes
-  nn_test_acc, nn_test_pre, nn_test_rec, nn_test_f1 = eval_edge_prediction_modified(model=tgn,
+  nn_test_acc, nn_test_acc_pos, nn_test_f1, nn_test_f1_pos = eval_edge_prediction_modified(model=tgn,
                                                                           negative_edge_sampler=nn_test_rand_sampler,
                                                                           data=new_node_test_data,
-                                                                          n_neighbors=NUM_NEIGHBORS)
+                                                                          n_neighbors=NUM_NEIGHBORS, if_pos = True)
 
   logger.info(
     'Test statistics: Old nodes -- acc_inherent: {}'.format(test_acc))
   logger.info(
-    'Test statistics: Old nodes -- pre_inherent: {}'.format(test_pre))
-  logger.info(
-      'Test statistics: Old nodes -- rec_inherent: {}'.format(test_rec))
+    'Test statistics: Old nodes -- acc_inherent pos: {}'.format(test_acc_pos))
   logger.info(
       'Test statistics: Old nodes -- f1_inherent: {}'.format(test_f1))
+  logger.info(
+      'Test statistics: Old nodes -- f1_inherent pos: {}'.format(test_f1_pos))
   
   logger.info(
     'Test statistics: New nodes -- acc_inherent: {}'.format(nn_test_acc))
   logger.info(
-    'Test statistics: New nodes -- pre_inherent: {}'.format(nn_test_pre))
-  logger.info(
-      'Test statistics: New nodes -- rec_inherent: {}'.format(nn_test_rec))
+    'Test statistics: New nodes -- acc_inherent pos: {}'.format(nn_test_acc_pos))
   logger.info(
       'Test statistics: New nodes -- f1_inherent: {}'.format(nn_test_f1))
+  logger.info(
+      'Test statistics: New nodes -- f1_inherent pos: {}'.format(nn_test_f1_pos))
   
   if args.do_baseline:
-    test_acc_b, test_pre_b, test_rec_b, test_f1_b = eval_edge_prediction_baseline_most(model=tgn,
+    test_acc_b, test_acc_b_pos, test_f1_b, test_f1_b_pos = eval_edge_prediction_baseline_most(model=tgn,
                                                               negative_edge_sampler=test_rand_sampler,
                                                               data=test_data,
-                                                              n_neighbors=NUM_NEIGHBORS)
+                                                              n_neighbors=NUM_NEIGHBORS, if_pos = True)
     
-    nn_test_acc_b, nn_test_pre_b, nn_test_rec_b, nn_test_f1_b = eval_edge_prediction_baseline_most(model=tgn,
+    nn_test_acc_b, nn_test_acc_b_pos, nn_test_f1_b, nn_test_f1_b_pos = eval_edge_prediction_baseline_most(model=tgn,
                                                                           negative_edge_sampler=test_rand_sampler,
                                                                           data=new_node_test_data,
-                                                                          n_neighbors=NUM_NEIGHBORS)
+                                                                          n_neighbors=NUM_NEIGHBORS, if_pos = True)
     
     logger.info(
         'test acc base: {}, new node test acc base: {}'.format(test_acc_b, nn_test_acc_b))
     logger.info(
-        'test pre base: {}, new node test pre base: {}'.format(test_pre_b, nn_test_pre_b))
-    logger.info(
-        'test rec base: {}, new node test rec base: {}'.format(test_rec_b, nn_test_rec_b))
+        'test acc pos base: {}, new node test acc pos base: {}'.format(test_acc_b_pos, nn_test_acc_b_pos))
     logger.info(
         'test f1 base: {}, new node test f1 base: {}'.format(test_f1_b, nn_test_f1_b))
+    logger.info(
+        'test f1 pos base: {}, new node test f1 pos base: {}'.format(test_f1_b_pos, nn_test_f1_b_pos))
     
-    val_acc, val_pre, val_rec, val_f1, val_acc_avg, val_pre_avg, val_rec_avg, val_f1_avg = eval_edge_prediction_baseline_persistence(model=tgn,
+    val_acc, val_acc_pos, val_f1, val_f1_pos, val_acc_avg, val_acc_avg_pos, val_f1_avg, val_f1_avg_pos = eval_edge_prediction_baseline_persistence(model=tgn,
                                                                 negative_edge_sampler=test_rand_sampler,
                                                                 data=test_data,
-                                                                n_neighbors=NUM_NEIGHBORS, train_data = train_data, val_data = val_data)
+                                                                n_neighbors=NUM_NEIGHBORS, train_data = train_data, val_data = val_data, if_pos = True)
     logger.info(
-      'Test statistics: Old nodes -- base last seen method: acc{}, pre{}, rec{}, f1{}'.format(val_acc, val_pre, val_rec, val_f1))
+      'Test statistics: Old nodes -- base last seen method: acc{}, acc pos {}, f1 {}, f1 pos {}'.format(val_acc, val_acc_pos, val_f1, val_f1_pos))
     logger.info(
-      'Test statistics: Old nodes -- base historical average method: acc{}, pre{}, rec{}, f1{}'.format(val_acc_avg, val_pre_avg, val_rec_avg, val_f1_avg))
+      'Test statistics: Old nodes -- base historical average method: acc{}, acc pos {}, f1 {}, f1 pos {}'.format(val_acc_avg, val_acc_avg_pos, val_f1_avg, val_f1_avg_pos))
+    
+    val_acc, val_acc_pos, val_f1, val_f1_pos, val_acc_avg, val_acc_avg_pos, val_f1_avg, val_f1_avg_pos = eval_edge_prediction_baseline_persistence(model=tgn,
+                                                                negative_edge_sampler=nn_test_rand_sampler,
+                                                                data=new_node_test_data,
+                                                                n_neighbors=NUM_NEIGHBORS, train_data = train_data, val_data = val_data, if_pos = True)
+    logger.info(
+      'Test statistics: New nodes -- base last seen method: acc{}, acc pos {}, f1 {}, f1 pos {}'.format(val_acc, val_acc_pos, val_f1, val_f1_pos))
+    logger.info(
+      'Test statistics: New nodes -- base historical average method: acc{}, acc pos {}, f1 {}, f1 pos {}'.format(val_acc_avg, val_acc_avg_pos, val_f1_avg, val_f1_avg_pos))
   
   # Save results for this run
   pickle.dump({
