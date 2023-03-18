@@ -50,7 +50,19 @@ python tgn/train_tgn_regression.py -d "$data" --use_memory --memory_updater rnn 
 (--node_in_normalization)
 ```
 
-The following sampling methods are available:
+### If do NOT want to use negative sampler:
 ```{bash}
-# TODO
+--no_negative_sampling
+```
+
+### The following data modifier are available:
+```{bash}
+--fill_all_edges
+
+--only_positive_edges
+```
+
+### If want to run baselines
+```{bash}
+--do_baseline
 ```
