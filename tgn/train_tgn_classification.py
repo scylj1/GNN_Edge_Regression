@@ -71,6 +71,8 @@ parser.add_argument('--val_ratio', type=float, default=0.15, help='Ratio of the 
 parser.add_argument('--test_ratio', type=float, default=0.15, help="Ratio of the test data.")
 parser.add_argument('--do_baseline', action='store_true',
                     help='Whether to evaluate using baseline')
+parser.add_argument('--no_negative_sampling', action='store_true',
+                    help='Whether to do negative sampling')
 
 try:
   args = parser.parse_args()
@@ -240,18 +242,17 @@ for i in range(args.n_runs):
 
           neg_label = torch.zeros(size, dtype=torch.long, device=device)
           pos_label = torch.tensor(edge_features_batch, dtype=torch.long, device=device).squeeze()
-          #print(pos_label.shape)
-          #print(neg_label.shape)
 
         tgn = tgn.train()
         pos_prob = tgn.compute_edge_probabilities_modified(sources_batch, destinations_batch, timestamps_batch,
                                             edge_idxs_batch, True, NUM_NEIGHBORS)
         neg_prob = tgn.compute_edge_probabilities_modified(sources_batch, negatives_batch, timestamps_batch,
                                                            edge_idxs_batch, False, NUM_NEIGHBORS)
-        #print(pos_prob.shape)
-        #print(neg_prob.shape)
 
-        loss += criterion(pos_prob, pos_label) + criterion(neg_prob, neg_label)
+        if args.no_negative_sampling:
+          loss += criterion(pos_prob, pos_label)
+        else:
+          loss += criterion(pos_prob, pos_label) + criterion(neg_prob, neg_label)
 
       loss /= args.backprop_every
 

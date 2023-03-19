@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument('-d', '--data', type=str, help='Dataset name (eg. wikipedia or reddit)',
                         default='wikipedia')
     parser.add_argument('--bs', type=int, default=200, help='Batch_size')
-    parser.add_argument('--seeds', type=int, default=6753, help='seeds')
+    parser.add_argument('--seeds', type=int, default=0, help='seeds')
     parser.add_argument('--n_epoch', type=int, default=200, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
     parser.add_argument('--patience', type=int, default=5, help='Patience for early stopping')
@@ -52,7 +52,7 @@ class EdgeRegGNN(torch.nn.Module):
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
         x = F.relu(self.conv1(x, edge_index))
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.dropout(x, p=0.1, training=self.training)
         x = F.relu(self.conv2(x, edge_index))
 
         x_i = torch.index_select(x, 0, edge_index[0])
