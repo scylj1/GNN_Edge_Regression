@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 
-def get_data(dataset_name, val_ratio, test_ratio, max_normalization=False, logarithmize_weights=False, node_out_normalization = False, node_out_normalization = False):
+def get_data(dataset_name, val_ratio, test_ratio, max_normalization=False, logarithmize_weights=False, node_out_normalization = False, node_in_normalization = False):
     ### Load data
     dataset_name = "UNtrade"
     graph_df = pd.read_csv('./data/ml_{}.csv'.format(dataset_name))

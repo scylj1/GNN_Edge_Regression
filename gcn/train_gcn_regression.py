@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument('-d', '--data', type=str, help='Dataset name (eg. wikipedia or reddit)',
                         default='wikipedia')
     parser.add_argument('--bs', type=int, default=200, help='Batch_size')
-    parser.add_argument('--seeds', type=int, default=0, help='seeds')
+    parser.add_argument('--seeds', type=int, default=6753, help='seeds')
     parser.add_argument('--n_epoch', type=int, default=200, help='Number of epochs')
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
     parser.add_argument('--patience', type=int, default=5, help='Patience for early stopping')
@@ -24,6 +24,10 @@ def parse_args():
                         help='Whether use min max normalization on weights')
     parser.add_argument('--logarithmize_weights', action='store_true',
                         help='Whether to logarithmize weights')
+    parser.add_argument('--node_out_normalization', action='store_true',
+                    help='Whether to normalization weights by dividing the largest out edge')
+    parser.add_argument('--node_in_normalization', action='store_true',
+                    help='Whether to normalization weights by dividing the largest in edge')
 
     # additional arguments
     parser.add_argument('--val_ratio', type=float, default=0.15, help='Ratio of the validation data.')
@@ -66,7 +70,8 @@ def process_data(args, device):
 
     train_x, val_x, test_x, train_edge, val_edge, test_edge, edge_index_source, edge_index_dest = get_data(args.data, args.val_ratio, args.test_ratio, 
                               max_normalization=args.max_normalization,
-                              logarithmize_weights=args.logarithmize_weights)
+                              logarithmize_weights=args.logarithmize_weights, node_out_normalization = args.node_out_normalization,
+                              node_in_normalization = args.node_in_normalization)
 
     train_data = wrap_data(train_x[0], edge_index_source, edge_index_dest, train_edge.reshape((-1, train_edge.shape[-1])))
     val_data = wrap_data(val_x[0], edge_index_source, edge_index_dest, val_edge.reshape((-1, val_edge.shape[-1])))
