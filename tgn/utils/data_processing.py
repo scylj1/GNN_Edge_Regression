@@ -81,6 +81,7 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
         graph_df = graph_df[graph_df.weight != 0]
         graph_df['idx'] = range(1, len(graph_df)+1)
 
+    print(graph_df.dtypes)
     # Whether to have a fully connected graph with not existing edges an weight 0
     if fill_all_edges:
         all_edges_df = pd.DataFrame(columns=graph_df.columns)
@@ -102,7 +103,7 @@ def get_data(dataset_name, val_ratio, test_ratio, different_new_nodes_between_va
         all_edges_df = merged[['u', 'i', 'ts', 'weight_x']].rename(columns={'weight_x': 'weight'})
         all_edges_df['label'] = [0 for _ in range(len(all_edges_df))]
         all_edges_df['idx'] = range(1, len(all_edges_df)+1)
-        graph_df = all_edges_df
+        graph_df = all_edges_df.astype('int32')
 
     sources = graph_df.u.values
     destinations = graph_df.i.values
