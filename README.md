@@ -1,4 +1,4 @@
-This repository is for the L45: Representation Learning on Graphs and Networks. 
+# This repository is for the L45: Representation Learning on Graphs and Networks. 
 
 ## Set up
 
@@ -80,7 +80,7 @@ data=UNtrade
 n_runs=1
 
 #baseline 
-python tgn/train_tgn_classification.py -d $data --use_memory --prefix "$prefix" --n_runs 1 --gpu 0 --n_epoch 1 --num_class 10
+python tgn/train_tgn_classification.py -d $data --use_memory --prefix "$prefix" --n_runs 1 --gpu 0 --n_epoch 1 --num_class 10 --do_baseline
 
 # TGN
 method=tgn
