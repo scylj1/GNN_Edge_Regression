@@ -4,3 +4,4 @@ conda install -c anaconda scikit-learn
 conda install -c conda-forge tqdm
 conda install -c anaconda numpy
 conda install -c conda-forge matplotlib
+conda install pytorch-geometric -c rusty1s -c pytorch
