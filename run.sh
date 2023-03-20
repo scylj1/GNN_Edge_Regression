@@ -1,4 +1,10 @@
 #!/bin/bash
+#SBATCH --cpus-per-task 7 # cpu resources (usually 7 cpu cores per GPU)
+#SBATCH --gres=gpu:rtx2080:1 # gpu resources ## use :gtx1080: or :rtx2080: or :v100: or :a40: (you can ask for more than 1 gpu if you want)
+#SBATCH --job-name=dgb # a name just for you to identify your job easily
+
+# source your conda environment (which should live in Aoraki)
+source /nfs-share/lj408/miniconda3/bin/activate dgb
 
 data=UNtrade
 n_runs=3
@@ -66,7 +72,7 @@ n_runs=3
 
 # Classification 
 #baseline 
-#python tgn/train_tgn_classification.py -d $data --use_memory --prefix "$prefix" --n_runs 1 --gpu 0 --n_epoch 1 --num_class 10
+#python tgn/train_tgn_classification.py -d $data --use_memory --prefix "$prefix" --n_runs 1 --gpu 0 --n_epoch 1 --num_class 10 --do_baseline
 
 # TGN
 #method=tgn
