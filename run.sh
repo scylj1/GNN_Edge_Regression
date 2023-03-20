@@ -66,7 +66,7 @@ n_runs=3
 
 # Classification 
 #baseline 
-#python tgn/train_tgn_classification.py -d $data --use_memory --prefix "$prefix" --n_runs 1 --gpu 0 --n_epoch 1 --num_class 10
+#python tgn/train_tgn_classification.py -d $data --use_memory --prefix "$prefix" --n_runs 1 --gpu 0 --n_epoch 1 --num_class 10 --do_baseline
 
 # TGN
 #method=tgn
