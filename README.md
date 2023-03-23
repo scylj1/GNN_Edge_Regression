@@ -1,4 +1,4 @@
-# This repository is for the L45: Representation Learning on Graphs and Networks. 
+# Can GNNs Perform Temporal Edge Regression Tasks? A Case Study on Agricultural Trade Between Nations
 
 ## Set up
 
