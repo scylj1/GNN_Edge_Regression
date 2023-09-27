@@ -1,4 +1,4 @@
-# Can GNNs Perform Temporal Edge Regression Tasks? A Case Study on Agricultural Trade Between Nations
+# Towards Temporal Edge Regression: A Case Study on Agriculture Trade Between Nations
 
 ## Set up
 
@@ -104,6 +104,3 @@ python tgn/train_tgn_classification.py -d "$data" --use_memory --memory_updater 
 --no_negative_sampling
 ```
 
-## Acknowledgement
-
-We would like to thank our supervisors [Shenyang (Andy) Huang](https://www.cs.mcgill.ca/~shuang43/) and Dr.[Farimah Poursafaei](https://scholar.google.ca/citations?user=gZ7HEsMAAAAJ&hl=en) for their kindly supports and the course lecturers Dr.[Petar Veličković](https://petar-v.com/) and Dr.[Pietro Liò](https://www.cl.cam.ac.uk/~pl219/) for their great teaching. We also thank the authors for providing the code access to [DGB](https://github.com/fpour/DGB) and [TGN](https://github.com/twitter-research/tgn). 
